@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete User Account - E-Learning Platform{% endblock %}
+
+{% block content %}
+<div class="admin-container animate-slide-up">
+    <div class="admin-card">
+        <div class="admin-header">
+            <h1 class="admin-title animate-slide-up">🗑️ Delete User Accounts</h1>
+            <p class="admin-subtitle animate-slide-up">Admin Only - Manage user accounts</p>
+        </div>
+        
+        <div class="delete-warning animate-slide-up">
+            <p><strong>Warning:</strong> Deleting a user account will permanently remove:</p>
+            <ul>
+                <li>User profile information</li>
+                <li>Course enrollments and progress</li>
+                <li>Test attempts and results</li>
+                <li>Profile picture</li>
+                <li>All associated data</li>
+            </ul>
+            <p>This action is irreversible. Please confirm before deleting.</p>
+        </div>
+        
+        <div class="users-list animate-slide-up">
+            {% if users %}
+                <h2>Registered Users ({{ users.count }})</h2>
+                <div class="users-grid">
+                    {% for user in users %}
+                        <div class="user-card">
+                            <div class="user-info">
+                                <h3>{{ user.username }}</h3>
+                                <p>{{ user.email }}</p>
+                                <p>Phone: {{ user.phone_number|default:"N/A" }}</p>
+                            </div>
+                            <form method="post" class="delete-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete {{ user.username }}? This action cannot be undone.')">Delete</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="no-users">No users found.</p>
+            {% endif %}
+        </div>
+        
+        <div class="admin-footer animate-slide-up">
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary btn-lg">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-container {
+    padding: var(--spacing-xl) 0;
+}
+
+.admin-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-2xl);
+    padding: var(--spacing-2xl);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--border-color);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.admin-header {
+    margin-bottom: var(--spacing-xl);
+    text-align: center;
+}
+
+.admin-title {
+    font-size: var(--text-3xl);
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.admin-subtitle {
+    font-size: var(--text-base);
+    color: var(--text-secondary);
+}
+
+.delete-warning {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.delete-warning ul {
+    margin: var(--spacing-md) 0;
+    padding-left: var(--spacing-lg);
+}
+
+.delete-warning li {
+    margin-bottom: var(--spacing-xs);
+}
+
+.users-list {
+    margin-bottom: var(--spacing-xl);
+}
+
+.users-list h2 {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+}
+
+.users-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.user-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all var(--transition-fast);
+}
+
+.user-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.user-info h3 {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.user-info p {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.delete-form {
+    margin: 0;
+}
+
+.no-users {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: var(--text-lg);
+    padding: var(--spacing-xl);
+}
+
+.admin-footer {
+    text-align: center;
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+    .admin-card {
+        padding: var(--spacing-lg);
+        margin: var(--spacing-md);
+    }
+    
+    .users-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .user-card {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-md);
+    }
+}
+</style>
+{% endblock %}

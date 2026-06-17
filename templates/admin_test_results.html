@@ -1,0 +1,410 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Test Results Management - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="admin-test-results">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>Test Results Management</h1>
+            <p>View and manage student test results and analytics</p>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section card">
+            <h3>Filter Results</h3>
+            <form method="GET" class="filter-form">
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label for="test_filter">Test Name</label>
+                        <select id="test_filter" name="test" class="form-control">
+                            <option value="">All Tests</option>
+                            {% for test in tests %}
+                                <option value="{{ test.id }}" {% if selected_test == test.id %}selected{% endif %}>{{ test.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="course_filter">Course Name</label>
+                        <select id="course_filter" name="course" class="form-control">
+                            <option value="">All Courses</option>
+                            {% for course in courses %}
+                                <option value="{{ course.id }}" {% if selected_course == course.id %}selected{% endif %}>{{ course.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="student_filter">Student Name</label>
+                        <input type="text" id="student_filter" name="student" class="form-control" placeholder="Search by name..." value="{{ student_search }}">
+                    </div>
+                    <div class="filter-group">
+                        <label for="status_filter">Result Status</label>
+                        <select id="status_filter" name="status" class="form-control">
+                            <option value="">All Status</option>
+                            <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Completed</option>
+                            <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Yet To Start</option>
+                            <option value="in_progress" {% if selected_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <a href="{% url 'admin_test_results' %}" class="btn btn-secondary">Clear Filters</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Quick Filter Tabs -->
+        <div class="quick-filters">
+            <button class="filter-tab active" data-filter="all">All Students</button>
+            <button class="filter-tab" data-filter="completed">Completed</button>
+            <button class="filter-tab" data-filter="pending">Pending</button>
+            <button class="filter-tab" data-filter="passed">Passed</button>
+            <button class="filter-tab" data-filter="failed">Failed</button>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <div class="stat-number" data-count="{{ stats.total_students }}">{{ stats.total_students }}</div>
+                <div class="stat-label">Total Students</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <div class="stat-number" data-count="{{ stats.completed }}">{{ stats.completed }}</div>
+                <div class="stat-label">Completed Test</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+                <div class="stat-number" data-count="{{ stats.pending }}">{{ stats.pending }}</div>
+                <div class="stat-label">Pending Students</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                </div>
+                <div class="stat-number" data-count="{{ stats.average_score }}">{{ stats.average_score }}%</div>
+                <div class="stat-label">Average Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                        <polyline points="17 6 23 6 23 12"></polyline>
+                    </svg>
+                </div>
+                <div class="stat-number" data-count="{{ stats.highest_score }}">{{ stats.highest_score }}%</div>
+                <div class="stat-label">Highest Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+                        <polyline points="17 18 23 18 23 12"></polyline>
+                    </svg>
+                </div>
+                <div class="stat-number" data-count="{{ stats.lowest_score }}">{{ stats.lowest_score }}%</div>
+                <div class="stat-label">Lowest Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                </div>
+                <div class="stat-number" data-count="{{ stats.pass_percentage }}">{{ stats.pass_percentage }}%</div>
+                <div class="stat-label">Pass Percentage</div>
+            </div>
+        </div>
+
+        <!-- Export Options -->
+        <div class="export-section">
+            <h3>Export Options</h3>
+            <div class="export-buttons">
+                <button class="btn btn-secondary" onclick="exportPDF()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Export PDF
+                </button>
+                <button class="btn btn-secondary" onclick="exportExcel()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="8" y1="13" x2="16" y2="13"></line>
+                        <line x1="8" y1="17" x2="16" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Export Excel
+                </button>
+                <button class="btn btn-secondary" onclick="printResults()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                        <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>
+                    Print Results
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <div class="results-table card">
+            <div class="table-header">
+                <h3>Test Results</h3>
+                <div class="table-search">
+                    <input type="text" id="table_search" class="form-control" placeholder="Search results...">
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Email</th>
+                            <th>Test Name</th>
+                            <th>Status</th>
+                            <th>Attempt</th>
+                            <th>Score</th>
+                            <th>Result</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in results %}
+                        <tr class="result-row" data-status="{{ result.status }}" data-passed="{{ result.passed }}">
+                            <td>
+                                <div class="student-info">
+                                    <div class="student-avatar">
+                                        {% if result.student.profile_photo %}
+                                            <img src="{{ result.student.profile_photo.url }}" alt="{{ result.student.username }}">
+                                        {% else %}
+                                            <span>{{ result.student.username|first|upper }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <strong>{{ result.student.get_full_name|default:result.student.username }}</strong>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ result.student.email }}</td>
+                            <td>{{ result.test.title }}</td>
+                            <td>
+                                {% if result.status == 'completed' %}
+                                    <span class="status-badge completed">✅ Completed</span>
+                                {% elif result.status == 'pending' %}
+                                    <span class="status-badge pending">⏳ Yet To Start</span>
+                                {% elif result.status == 'in_progress' %}
+                                    <span class="status-badge in_progress">🔄 In Progress</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="attempt-info">
+                                    {{ result.attempts_used }} / {{ result.max_attempts }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if result.status == 'completed' %}
+                                    <span class="score-display">{{ result.score }}%</span>
+                                {% elif result.status == 'pending' %}
+                                    <span class="score-display">-</span>
+                                {% elif result.status == 'in_progress' %}
+                                    <span class="score-display">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if result.status == 'completed' %}
+                                    {% if result.passed %}
+                                        <span class="result-badge passed">Pass</span>
+                                    {% else %}
+                                        <span class="result-badge failed">Fail</span>
+                                    {% endif %}
+                                {% elif result.status == 'pending' %}
+                                    <span class="result-badge pending">Yet To Start Test</span>
+                                {% elif result.status == 'in_progress' %}
+                                    <span class="result-badge in_progress">Test Not Submitted</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if result.status == 'completed' %}
+                                    <button class="btn btn-sm btn-primary" onclick="viewResult({{ result.id }})">View Result</button>
+                                {% else %}
+                                    <button class="btn btn-sm btn-secondary" disabled>No Result</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="no-results">No results found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination -->
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="pagination-link">Previous</a>
+                {% endif %}
+                <span class="pagination-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="pagination-link">Next</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Result Detail Modal -->
+<div id="resultModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Test Result Details</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <!-- Result details will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<script>
+function viewResult(resultId) {
+    // Fetch result details via AJAX
+    fetch(`/admin/test-result/${resultId}/`)
+        .then(response => response.json())
+        .then(data => {
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="result-detail">
+                    <div class="detail-section">
+                        <h4>Student Information</h4>
+                        <p><strong>Name:</strong> ${data.student_name}</p>
+                        <p><strong>Email:</strong> ${data.student_email}</p>
+                    </div>
+                    <div class="detail-section">
+                        <h4>Test Information</h4>
+                        <p><strong>Test Name:</strong> ${data.test_name}</p>
+                        <p><strong>Attempt Number:</strong> ${data.attempt_number}</p>
+                        <p><strong>Time Taken:</strong> ${data.time_taken}</p>
+                    </div>
+                    <div class="detail-section">
+                        <h4>Performance</h4>
+                        <p><strong>Questions Attempted:</strong> ${data.questions_attempted}</p>
+                        <p><strong>Correct Answers:</strong> ${data.correct_answers}</p>
+                        <p><strong>Wrong Answers:</strong> ${data.wrong_answers}</p>
+                        <p><strong>Percentage:</strong> ${data.percentage}%</p>
+                        <p><strong>Status:</strong> ${data.passed ? '✅ Pass' : '❌ Fail'}</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('resultModal').style.display = 'block';
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load result details'
+            });
+        });
+}
+
+function closeModal() {
+    document.getElementById('resultModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('resultModal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Quick filter functionality
+document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        const filter = this.getAttribute('data-filter');
+        document.querySelectorAll('.result-row').forEach(row => {
+            if (filter === 'all') {
+                row.style.display = '';
+            } else {
+                const rowStatus = row.getAttribute('data-status');
+                const rowPassed = row.getAttribute('data-passed');
+                
+                if (filter === 'completed' && rowStatus === 'completed') {
+                    row.style.display = '';
+                } else if (filter === 'pending' && rowStatus === 'pending') {
+                    row.style.display = '';
+                } else if (filter === 'passed' && rowPassed === 'true') {
+                    row.style.display = '';
+                } else if (filter === 'failed' && rowPassed === 'false') {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    });
+});
+
+// Table search functionality
+document.getElementById('table_search').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    document.querySelectorAll('.result-row').forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Export functions
+function exportPDF() {
+    window.print();
+}
+
+function exportExcel() {
+    Swal.fire({
+        icon: 'info',
+        title: 'Export Excel',
+        text: 'Excel export functionality will be implemented with backend integration'
+    });
+}
+
+function printResults() {
+    window.print();
+}
+</script>
+{% endblock %}

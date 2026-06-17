@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Question {{ current_index }} of {{ total_questions }}{% endblock %}
+
+{% block extra_js %}
+<script>
+let timer;
+const timePerQuestion = {{ time_per_question }};
+let timeLeft = timePerQuestion;
+
+function startTimer() {
+    timer = setInterval(function() {
+        timeLeft--;
+        document.getElementById('timer').textContent = timeLeft;
+        
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            submitAnswer();
+        }
+    }, 1000);
+}
+
+function submitAnswer() {
+    clearInterval(timer);
+    const selectedAnswer = document.querySelector('input[name="answer_id"]:checked');
+    const form = document.getElementById('question-form');
+    
+    if (selectedAnswer) {
+        form.submit();
+    } else {
+        // Submit without answer if time expired
+        form.submit();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    startTimer();
+    
+    // Apply test security restrictions
+    applyTestSecurityRestrictions();
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="test-container bounce-in">
+        <!-- Test Progress Header -->
+        <div class="test-progress-header">
+            <div class="progress-info">
+                <span>Question {{ current_index }} of {{ total_questions }}</span>
+                <span>Time: <span id="timer">{{ time_per_question }}</span>s</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ progress_percentage }}%"></div>
+            </div>
+        </div>
+        
+        <!-- Question Card -->
+        <div class="question-card">
+            <h2>{{ question.question_text }}</h2>
+            
+            <form method="post" id="question-form">
+                {% csrf_token %}
+                
+                <div class="answers-list">
+                    {% for answer in answers %}
+                        <div class="answer-option">
+                            <input type="radio" id="answer_{{ answer.id }}" name="answer_id" value="{{ answer.id }}">
+                            <label for="answer_{{ answer.id }}">{{ answer.answer_text }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="question-actions">
+                    <button type="button" onclick="submitAnswer()" class="btn btn-primary">Next Question</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.test-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.test-progress-header {
+    background-color: var(--bg-card);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.progress-bar {
+    height: 10px;
+    background-color: var(--bg-secondary);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: var(--accent-color);
+    transition: width 0.3s ease;
+}
+
+.question-card {
+    background-color: var(--bg-card);
+    padding: 30px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.question-card h2 {
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.answers-list {
+    margin-bottom: 20px;
+}
+
+.answer-option {
+    margin-bottom: 15px;
+    padding: 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.answer-option:hover {
+    border-color: var(--accent-color);
+    background-color: var(--bg-secondary);
+}
+
+.answer-option input[type="radio"] {
+    margin-right: 10px;
+}
+
+.answer-option label {
+    cursor: pointer;
+    color: var(--text-primary);
+}
+
+.question-actions {
+    text-align: right;
+}
+
+#timer {
+    color: var(--accent-color);
+    font-weight: bold;
+    font-size: 1.2em;
+}
+</style>
+{% endblock %}

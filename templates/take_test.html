@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Take Test - {{ test.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ test.title }}</h1>
+    <p><strong>Duration:</strong> {{ test.duration }} minutes</p>
+    <p><strong>Passing Score:</strong> {{ test.passing_score }}%</p>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+        
+        {% for question in test.questions.all %}
+            <div class="question-item">
+                <h3>{{ question.question_text }}</h3>
+                <p><strong>Type:</strong> {{ question.get_question_type_display }}</p>
+                
+                {% if question.question_type == 'mcq' %}
+                    <div class="answers">
+                        {% for answer in question.answers.all %}
+                            <label class="answer-option">
+                                <input type="radio" 
+                                       name="question_{{ question.id }}" 
+                                       value="{{ answer.id }}" 
+                                       required>
+                                {{ answer.answer_text }}
+                            </label>
+                        {% endfor %}
+                    </div>
+                {% elif question.question_type == 'true_false' %}
+                    <div class="answers">
+                        <label class="answer-option">
+                            <input type="radio" 
+                                   name="question_{{ question.id }}" 
+                                   value="true" 
+                                   required>
+                            True
+                        </label>
+                        <label class="answer-option">
+                            <input type="radio" 
+                                   name="question_{{ question.id }}" 
+                                   value="false" 
+                                   required>
+                            False
+                        </label>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        
+        <button type="submit" class="btn btn-primary">Submit Test</button>
+    </form>
+</div>
+{% endblock %}

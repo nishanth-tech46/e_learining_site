@@ -1,0 +1,637 @@
+{% extends 'base.html' %}
+
+{% block title %}Learning - {{ course.title }} - E-Learning Platform{% endblock %}
+
+{% block content %}
+<div class="learning-page">
+    <div class="container">
+        <!-- Learning Header -->
+        <div class="learning-header animate-slide-up">
+            <div class="learning-header-content">
+                <h1>{{ course.title }}</h1>
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <span class="progress-label">Course Progress</span>
+                        <span class="progress-percentage">{{ enrollment.progress }}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ enrollment.progress }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2-Column Layout -->
+        <div class="learning-layout animate-slide-up">
+            <!-- Left Sidebar - Course Content -->
+            <aside class="learning-sidebar">
+                <div class="course-sidebar">
+                    <h3 class="sidebar-title">📚 Course Content</h3>
+                    
+                    {% for day_number, day_content in days.items %}
+                        <div class="module-item">
+                            <div class="module-header" onclick="toggleModule('module-{{ day_number }}')">
+                                <span class="module-title">Day {{ day_number }}</span>
+                                <span class="module-arrow">▼</span>
+                            </div>
+                            <div class="module-lessons" id="module-{{ day_number }}">
+                                {% if day_content.videos %}
+                                    <div class="lesson-group">
+                                        <span class="lesson-group-title">📹 Videos</span>
+                                        {% for video in day_content.videos %}
+                                            <div class="lesson-item {% if current_video and current_video.id == video.id %}active{% endif %}">
+                                                <a href="{% url 'course_learning' course.id %}?video={{ video.id }}">
+                                                    <span class="lesson-icon">▶️</span>
+                                                    <span class="lesson-text">{{ video.title }}</span>
+                                                    {% if video.is_live %}
+                                                        <span class="badge badge-danger">LIVE</span>
+                                                    {% endif %}
+                                                </a>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                
+                                {% if day_content.files %}
+                                    <div class="lesson-group">
+                                        <span class="lesson-group-title">📄 Resources</span>
+                                        {% for file in day_content.files %}
+                                            <div class="lesson-item">
+                                                <div class="lesson-content">
+                                                    <span class="lesson-icon">📄</span>
+                                                    <span class="lesson-text">{{ file.title }}</span>
+                                                    <span class="badge badge-secondary">{{ file.get_file_type_display }}</span>
+                                                    <span class="badge badge-warning">🔒 View Only</span>
+                                                </div>
+                                                <a href="{% url 'view_file' file.id %}" target="_blank" class="btn btn-sm btn-secondary">View</a>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                
+                                {% if day_content.tests %}
+                                    <div class="lesson-group">
+                                        <span class="lesson-group-title">📝 Tests</span>
+                                        {% for test in day_content.tests %}
+                                            <div class="lesson-item">
+                                                <div class="lesson-content">
+                                                    <span class="lesson-icon">📝</span>
+                                                    <span class="lesson-text">{{ test.title }}</span>
+                                                    <span class="lesson-meta">{{ test.duration }} min</span>
+                                                </div>
+                                                <a href="{% url 'take_test' test.id %}" class="btn btn-sm btn-primary">Take Test</a>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                
+                                {% if day_content.live_sessions %}
+                                    <div class="lesson-group">
+                                        <span class="lesson-group-title">🔴 Live Sessions</span>
+                                        {% for session in day_content.live_sessions %}
+                                            <div class="lesson-item">
+                                                <div class="lesson-content">
+                                                    <span class="lesson-icon">🔴</span>
+                                                    <span class="lesson-text">{{ session.title }}</span>
+                                                    {% if session.is_active %}
+                                                        <span class="badge badge-success">LIVE NOW</span>
+                                                    {% endif %}
+                                                </div>
+                                                <a href="{% url 'watch_live_session' session.id %}" class="btn btn-sm btn-primary">Watch</a>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </aside>
+
+            <!-- Right Content Area - Video Player -->
+            <main class="learning-content">
+                {% if current_video %}
+                    {% if current_video.is_live %}
+                        <div class="live-badge animate-pulse">🔴 LIVE</div>
+                    {% endif %}
+                    
+                    <div class="video-player-container animate-scale-in">
+                        <div class="video-protection-badge">🔒 Protected Video - Stream Only</div>
+                        <video controls id="main-video" width="100%" data-watched-duration="{% if video_progress %}{{ video_progress.watched_duration }}{% endif %}" oncontextmenu="return false;" controlsList="nodownload">
+                            <source src="{% url 'protected_video_stream' current_video.id %}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        
+                        <div class="video-enhanced-controls">
+                            <div class="video-time-display">
+                                <span id="current-time">0:00</span> / <span id="video-duration">0:00</span>
+                                <span id="progress-percentage">0%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="video-protection-message">
+                            This video can only be viewed inside the platform. Downloading and seeking are disabled.
+                            <br>
+                            <small>Keyboard: Space = Play/Pause, F = Fullscreen</small>
+                        </div>
+                    </div>
+                    
+                    <div class="video-details animate-slide-up">
+                        <h2>{{ current_video.title }}</h2>
+                        <p>{{ current_video.description }}</p>
+                        {% if current_video.duration %}
+                            <p class="duration">⏱️ Duration: {{ current_video.duration }} seconds</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="video-controls animate-slide-up">
+                        {% if previous_video %}
+                            <a href="{% url 'course_learning' course.id %}?video={{ previous_video.id }}" class="btn btn-secondary">← Previous Lesson</a>
+                        {% endif %}
+                        {% if next_video %}
+                            <a href="{% url 'course_learning' course.id %}?video={{ next_video.id }}" class="btn btn-primary">Next Lesson →</a>
+                        {% endif %}
+                    </div>
+                    
+                    <form method="post" action="{% url 'update_video_progress' current_video.id %}" id="progress-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="watched_duration" id="watched-duration" value="0">
+                        <input type="hidden" name="is_completed" id="is-completed" value="false">
+                    </form>
+                {% else %}
+                    <div class="no-video animate-slide-up">
+                        <div class="no-video-icon">📹</div>
+                        <h2>No video selected</h2>
+                        <p>Please select a video from the course content sidebar to start learning.</p>
+                    </div>
+                {% endif %}
+            </main>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const video = document.getElementById('main-video');
+    const progressForm = document.getElementById('progress-form');
+    const watchedDurationInput = document.getElementById('watched-duration');
+    const isCompletedInput = document.getElementById('is-completed');
+    const csrfToken = '{{ csrf_token }}';
+    const currentTimeDisplay = document.getElementById('current-time');
+    const durationDisplay = document.getElementById('video-duration');
+    const progressPercentageDisplay = document.getElementById('progress-percentage');
+    
+    if (video) {
+        let lastUpdateTime = Date.now();
+        let isSeeking = false;
+        
+        // Update time display when metadata is loaded
+        video.addEventListener('loadedmetadata', function() {
+            durationDisplay.textContent = formatTime(video.duration);
+        });
+        
+        // Update time display during playback
+        video.addEventListener('timeupdate', function() {
+            const currentTime = Math.floor(video.currentTime);
+            watchedDurationInput.value = currentTime;
+            currentTimeDisplay.textContent = formatTime(video.currentTime);
+            
+            // Update progress percentage
+            if (video.duration > 0) {
+                const percentage = Math.floor((video.currentTime / video.duration) * 100);
+                progressPercentageDisplay.textContent = percentage + '%';
+            }
+            
+            // Only update progress via AJAX if not seeking (prevents interference)
+            if (!isSeeking && Date.now() - lastUpdateTime > 10000) {
+                // Use AJAX to update progress without page refresh
+                fetch(progressForm.action, {
+                    method: 'POST',
+                    body: new FormData(progressForm),
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                }).catch(error => console.error('Error updating progress:', error));
+                lastUpdateTime = Date.now();
+            }
+        });
+        
+        // Detect when user is seeking (dragging timeline)
+        video.addEventListener('seeking', function() {
+            isSeeking = true;
+        });
+        
+        // Detect when seeking is complete
+        video.addEventListener('seeked', function() {
+            isSeeking = false;
+            // Update progress immediately after seeking
+            watchedDurationInput.value = Math.floor(video.currentTime);
+            fetch(progressForm.action, {
+                method: 'POST',
+                body: new FormData(progressForm),
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            }).catch(error => console.error('Error updating progress:', error));
+        });
+        
+        video.addEventListener('ended', function() {
+            isCompletedInput.value = 'true';
+            // Use AJAX to update progress without page refresh
+            fetch(progressForm.action, {
+                method: 'POST',
+                body: new FormData(progressForm),
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            }).catch(error => console.error('Error updating progress:', error));
+        });
+        
+        // Resume from last watched position
+        const watchedDuration = video.getAttribute('data-watched-duration');
+        if (watchedDuration) {
+            video.currentTime = parseInt(watchedDuration);
+        }
+        
+        // Disable seeking - prevent user from changing video position
+        let isPlaying = false;
+        let lastValidTime = 0;
+        
+        video.addEventListener('play', function() {
+            isPlaying = true;
+            lastValidTime = video.currentTime;
+        });
+        
+        video.addEventListener('pause', function() {
+            isPlaying = false;
+        });
+        
+        video.addEventListener('seeking', function(e) {
+            // Only prevent seeking if video is playing and user is trying to seek
+            if (isPlaying && Math.abs(video.currentTime - lastValidTime) > 0.5) {
+                // Revert to the position before seeking
+                video.currentTime = lastValidTime;
+            }
+        });
+        
+        video.addEventListener('timeupdate', function() {
+            // Update last valid time during normal playback
+            if (isPlaying) {
+                lastValidTime = video.currentTime;
+            }
+        });
+        
+        // Keyboard shortcuts - only play/pause and fullscreen
+        video.addEventListener('keydown', function(e) {
+            switch(e.key) {
+                case ' ':
+                    e.preventDefault();
+                    togglePlayPause();
+                    break;
+                case 'f':
+                case 'F':
+                    e.preventDefault();
+                    toggleFullscreen();
+                    break;
+                case 'ArrowLeft':
+                case 'ArrowRight':
+                    // Prevent seeking with arrow keys
+                    e.preventDefault();
+                    break;
+            }
+        });
+        
+        // Global keyboard shortcuts (when video is focused or not)
+        document.addEventListener('keydown', function(e) {
+            // Only handle if not typing in an input field
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                return;
+            }
+            
+            switch(e.key) {
+                case ' ':
+                    if (video) {
+                        e.preventDefault();
+                        togglePlayPause();
+                    }
+                    break;
+                case 'f':
+                case 'F':
+                    if (video) {
+                        e.preventDefault();
+                        toggleFullscreen();
+                    }
+                    break;
+                case 'ArrowLeft':
+                case 'ArrowRight':
+                    // Prevent seeking with arrow keys
+                    if (video) {
+                        e.preventDefault();
+                    }
+                    break;
+            }
+        });
+    }
+});
+
+function formatTime(seconds) {
+    if (isNaN(seconds)) return '0:00';
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    if (hours > 0) {
+        return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+}
+
+function togglePlayPause() {
+    const video = document.getElementById('main-video');
+    if (video) {
+        if (video.paused) {
+            video.play();
+        } else {
+            video.pause();
+        }
+    }
+}
+
+function toggleFullscreen() {
+    const video = document.getElementById('main-video');
+    if (video) {
+        if (video.requestFullscreen) {
+            video.requestFullscreen();
+        } else if (video.webkitRequestFullscreen) {
+            video.webkitRequestFullscreen();
+        } else if (video.msRequestFullscreen) {
+            video.msRequestFullscreen();
+        }
+    }
+}
+
+function toggleModule(moduleId) {
+    const module = document.getElementById(moduleId);
+    const arrow = module.previousElementSibling.querySelector('.module-arrow');
+    
+    if (module.style.display === 'none') {
+        module.style.display = 'block';
+        arrow.style.transform = 'rotate(0deg)';
+    } else {
+        module.style.display = 'none';
+        arrow.style.transform = 'rotate(-90deg)';
+    }
+}
+</script>
+
+<style>
+.learning-page {
+    padding: var(--spacing-xl) 0;
+}
+
+.learning-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.learning-header-content h1 {
+    font-size: var(--text-3xl);
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+}
+
+.progress-section {
+    background: var(--bg-card);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.progress-label {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.progress-percentage {
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.sidebar-title {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.lesson-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.lesson-group-title {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--spacing-sm);
+    display: block;
+}
+
+.lesson-item {
+    margin-bottom: var(--spacing-xs);
+}
+
+.lesson-item a {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.lesson-item a:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.lesson-item.active a {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.lesson-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex: 1;
+}
+
+.lesson-icon {
+    font-size: var(--text-sm);
+}
+
+.lesson-text {
+    flex: 1;
+    font-size: var(--text-sm);
+}
+
+.lesson-meta {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+.live-badge {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    background: var(--danger-color);
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    z-index: 10;
+}
+
+.video-details {
+    margin-top: var(--spacing-xl);
+    padding: var(--spacing-xl);
+    background: var(--bg-card);
+    border-radius: var(--radius-2xl);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+
+.video-details h2 {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.video-details p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.video-details .duration {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin-top: var(--spacing-md);
+}
+
+.video-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-lg);
+    gap: var(--spacing-md);
+}
+
+.video-player-container {
+    position: relative;
+    background: var(--bg-card);
+    border-radius: var(--radius-2xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-xl);
+}
+
+/* Disable video seeking by hiding timeline controls */
+video#main-video::-webkit-media-controls-timeline {
+    display: none !important;
+}
+
+video#main-video::-webkit-media-controls-time-remaining-display {
+    display: none !important;
+}
+
+/* Disable seeking in Firefox */
+video#main-video::-moz-range-thumb {
+    display: none !important;
+}
+
+/* Disable video download in Chrome */
+video#main-video::-internal-media-controls-download-button {
+    display: none !important;
+}
+
+.video-protection-badge {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    background: var(--danger-color);
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    font-size: var(--text-sm);
+    z-index: 10;
+    box-shadow: var(--shadow-md);
+}
+
+.video-protection-message {
+    background: var(--bg-secondary);
+    padding: var(--spacing-md);
+    text-align: center;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-color);
+}
+
+.no-video {
+    text-align: center;
+    padding: var(--spacing-3xl);
+    background: var(--bg-card);
+    border-radius: var(--radius-2xl);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+
+.no-video-icon {
+    font-size: 5rem;
+    margin-bottom: var(--spacing-lg);
+}
+
+.no-video h2 {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.no-video p {
+    color: var(--text-secondary);
+}
+
+@media (max-width: 1024px) {
+    .learning-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .learning-sidebar {
+        position: static;
+        max-height: none;
+    }
+}
+</style>
+{% endblock %}

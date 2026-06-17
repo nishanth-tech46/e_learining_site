@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Question - {{ question.question_text|truncatewords:10 }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Delete Question</h1>
+    
+    <div class="delete-confirmation">
+        <h2>Are you sure you want to delete this question?</h2>
+        
+        <div class="question-details">
+            <p><strong>Test:</strong> {{ question.test.title }}</p>
+            <p><strong>Question:</strong> {{ question.question_text }}</p>
+            <p><strong>Type:</strong> {{ question.get_question_type_display }}</p>
+            <p><strong>Order:</strong> {{ question.order }}</p>
+            <p><strong>Created:</strong> {{ question.created_at }}</p>
+            <p><strong>Last Modified:</strong> {{ question.updated_at }}</p>
+            
+            {% if question.answers.all %}
+                <p><strong>Answers to be deleted:</strong> {{ question.answers.count }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="warning">
+            <p>⚠️ This action cannot be undone. Please confirm that you want to delete this question and all its answers.</p>
+        </div>
+        
+        <form method="post" class="delete-form">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Yes, Delete Question</button>
+            <a href="{% url 'test_detail' question.test.id %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

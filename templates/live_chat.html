@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Live Chat - {{ session.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Live Chat - {{ session.title }}</h1>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="chat-container">
+        <div class="chat-messages">
+            {% for msg in messages %}
+                <div class="chat-message {% if msg.sender == request.user %}sent{% else %}received{% endif %}">
+                    <div class="message-header">
+                        <strong>{{ msg.sender.username }}</strong>
+                        <small>{{ msg.created_at }}</small>
+                    </div>
+                    <div class="message-content">
+                        {{ msg.message }}
+                    </div>
+                    {% if msg.recipient %}
+                        <small>To: {{ msg.recipient.username }}</small>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="chat-input">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if request.user.user_type == 'admin' %}
+                    <div class="form-group">
+                        <label for="message_type">Message Type:</label>
+                        <select name="message_type" id="message_type">
+                            <option value="admin_to_all">To All Users</option>
+                            <option value="admin_to_user">To Specific User</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="recipient-group" style="display: none;">
+                        <label for="recipient_id">Recipient:</label>
+                        <select name="recipient_id" id="recipient_id">
+                            <option value="">Select User</option>
+                            {% for enrollment in session.course.enrollments.all %}
+                                <option value="{{ enrollment.user.id }}">{{ enrollment.user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+                
+                <div class="form-group">
+                    <textarea name="message" id="message" rows="3" placeholder="Type your message..." required></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Send</button>
+            </form>
+        </div>
+    </div>
+    
+    <a href="{% url 'watch_live_session' session.id %}" class="btn btn-secondary">Back to Live Session</a>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var messageTypeSelect = document.getElementById('message_type');
+    var recipientGroup = document.getElementById('recipient-group');
+    
+    if (messageTypeSelect) {
+        messageTypeSelect.addEventListener('change', function() {
+            if (this.value === 'admin_to_user') {
+                recipientGroup.style.display = 'block';
+            } else {
+                recipientGroup.style.display = 'none';
+            }
+        });
+    }
+    
+    // Auto-refresh chat messages every 5 seconds
+    setInterval(function() {
+        location.reload();
+    }, 5000);
+});
+</script>
+{% endblock %}

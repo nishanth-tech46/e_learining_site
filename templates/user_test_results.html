@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}User Test Results - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>User Test Results - {{ course.title }}</h1>
+    
+    <a href="{% url 'admin_course_detail' course.id %}" class="btn btn-secondary">Back to Course</a>
+    
+    {% if attempts %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Test</th>
+                    <th>Score</th>
+                    <th>Correct</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Started</th>
+                    <th>Completed</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for attempt in attempts %}
+                    <tr>
+                        <td>{{ attempt.user.username }}</td>
+                        <td>{{ attempt.test.title }}</td>
+                        <td>{{ attempt.score }}%</td>
+                        <td>{{ attempt.correct_answers }}</td>
+                        <td>{{ attempt.total_questions }}</td>
+                        <td>
+                            {% if attempt.is_passed %}
+                                <span class="badge badge-success">Passed</span>
+                            {% else %}
+                                <span class="badge badge-danger">Failed</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ attempt.started_at }}</td>
+                        <td>{{ attempt.completed_at }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No test attempts found.</p>
+    {% endif %}
+</div>
+{% endblock %}

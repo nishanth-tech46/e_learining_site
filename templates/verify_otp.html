@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify OTP - E-Learning Platform{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box">
+        <h1>Verify OTP</h1>
+        <p>Enter the OTP sent to your {{ request.session.otp_type }}</p>
+        
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.otp.id_for_label }}">{{ form.otp.label }}:</label>
+                {{ form.otp }}
+                {% if form.otp.errors %}
+                    <div class="error">{{ form.otp.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-full">Verify OTP</button>
+        </form>
+        
+        <div class="auth-footer">
+            <p><a href="{% url 'login' %}">Back to Login</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

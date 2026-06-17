@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Watch Live Session - {{ session.title }}{% endblock %}
+
+{% block content %}
+<div class="live-session-page">
+    <div class="container">
+        <div class="live-header">
+            <h1>{{ session.title }}</h1>
+            {% if session.is_active %}
+                <div class="live-badge">🔴 LIVE NOW</div>
+            {% else %}
+                <div class="offline-badge">⚫ OFFLINE</div>
+            {% endif %}
+        </div>
+        
+        <div class="live-info">
+            <p>{{ session.description }}</p>
+            <p><strong>Scheduled:</strong> {{ session.scheduled_at }}</p>
+            <p><strong>Duration:</strong> {{ session.duration }} minutes</p>
+            <p><strong>Day:</strong> {{ session.day }}</p>
+        </div>
+        
+        {% if session.is_active and session.stream_url %}
+            <div class="live-stream-container">
+                {% if 'jitsi' in session.stream_url %}
+                    <!-- Jitsi Meet Embed -->
+                    <iframe 
+                        src="{{ session.stream_url }}" 
+                        allow="camera; microphone; fullscreen; display-capture; autoplay"
+                        style="width: 100%; height: 600px; border: 0;"
+                        allowfullscreen>
+                    </iframe>
+                {% elif 'youtube' in session.stream_url or 'youtu.be' in session.stream_url %}
+                    <!-- YouTube Embed -->
+                    <div class="video-wrapper">
+                        <iframe 
+                            src="{{ session.stream_url }}" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen
+                            style="width: 100%; height: 600px;">
+                        </iframe>
+                    </div>
+                {% else %}
+                    <!-- Generic iframe embed -->
+                    <iframe 
+                        src="{{ session.stream_url }}" 
+                        frameborder="0" 
+                        allow="camera; microphone; fullscreen; display-capture; autoplay"
+                        style="width: 100%; height: 600px;"
+                        allowfullscreen>
+                    </iframe>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="offline-message">
+                <h2>📡 Live stream is currently offline</h2>
+                <p>The live session has not started yet or has ended.</p>
+                <p>Please check back later or contact your instructor for more information.</p>
+            </div>
+        {% endif %}
+        
+        <div class="live-actions">
+            {% if session.is_active %}
+                <a href="{% url 'live_chat' session.id %}" class="btn btn-primary">💬 Open Chat</a>
+            {% endif %}
+            <a href="{% url 'course_learning' session.course.id %}" class="btn btn-secondary">← Back to Course</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Test - {{ test.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Delete Test</h1>
+    
+    <div class="delete-confirmation">
+        <h2>Are you sure you want to delete this test?</h2>
+        
+        <div class="test-details">
+            <p><strong>Course:</strong> {{ test.course.title }}</p>
+            <p><strong>Title:</strong> {{ test.title }}</p>
+            <p><strong>Description:</strong> {{ test.description|truncatewords:20 }}</p>
+            <p><strong>Duration:</strong> {{ test.duration }} minutes</p>
+            <p><strong>Passing Score:</strong> {{ test.passing_score }}%</p>
+            <p><strong>Day:</strong> {{ test.day }}</p>
+            <p><strong>Created:</strong> {{ test.created_at }}</p>
+            <p><strong>Last Modified:</strong> {{ test.updated_at }}</p>
+            
+            {% if test.questions.all %}
+                <p><strong>Questions to be deleted:</strong> {{ test.questions.count }}</p>
+            {% endif %}
+            
+            {% if test.attempts.all %}
+                <p><strong>Student attempts to be deleted:</strong> {{ test.attempts.count }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="warning">
+            <p>⚠️ This action cannot be undone. This will delete the entire test, all associated questions, all answers, and all student attempts.</p>
+        </div>
+        
+        <form method="post" class="delete-form">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Yes, Delete Test</button>
+            <a href="{% url 'admin_course_detail' test.course.id %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

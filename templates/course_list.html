@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Courses - E-Learning Platform{% endblock %}
+
+{% block content %}
+<div class="course-list-page">
+    <div class="container">
+        <div class="page-header">
+            <h1>Explore Courses</h1>
+            <p>Discover new skills and advance your career</p>
+        </div>
+        
+        <div class="filters">
+            <div class="filter-group">
+                <label for="category-filter">Filter by Category:</label>
+                <select id="category-filter" onchange="filterCourses()" aria-label="Filter courses by category">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="course-grid">
+            {% for course in page_obj %}
+                <article class="course-card">
+                    {% if course.thumbnail %}
+                        <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" class="course-thumbnail" loading="lazy">
+                    {% else %}
+                        <div class="course-thumbnail placeholder">📚</div>
+                    {% endif %}
+                    <div class="course-info">
+                        <div class="course-meta">
+                            <span class="badge badge-primary">{{ course.category.name|default:"General" }}</span>
+                            <span class="badge badge-info">{{ course.get_level_display }}</span>
+                        </div>
+                        <h3>{{ course.title }}</h3>
+                        <p class="instructor">By {{ course.instructor.username }}</p>
+                        <p>{{ course.description|truncatewords:15 }}</p>
+                        <div class="course-footer">
+                            <span class="duration">⏱️ {{ course.duration|default:"N/A" }}</span>
+                            <span class="price">₹{{ course.price }}</span>
+                        </div>
+                        <div class="course-actions">
+                            <a href="{% url 'course_detail' course.id %}" class="btn btn-primary btn-full">View Details</a>
+                        </div>
+                    </div>
+                </article>
+            {% empty %}
+                <div class="empty-state">
+                    <p>No courses available.</p>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if page_obj.has_other_pages %}
+            <nav class="pagination" aria-label="Course pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}" class="btn btn-secondary" aria-label="Previous page">Previous</a>
+                {% endif %}
+                
+                <span class="page-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}" class="btn btn-secondary" aria-label="Next page">Next</a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function filterCourses() {
+    const category = document.getElementById('category-filter').value;
+    if (category) {
+        window.location.href = `?category=${category}`;
+    } else {
+        window.location.href = '{% url "course_list" %}';
+    }
+}
+</script>
+
+<style>
+.course-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: var(--spacing-md) 0;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+.course-footer .duration {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+.course-footer .price {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--success-color);
+}
+
+.course-actions {
+    margin-top: auto;
+}
+</style>
+{% endblock %}

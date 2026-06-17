@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - E-Learning Platform{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <div class="container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header animate-slide-up">
+            <h1>Welcome back, {{ user.username }}! 👋</h1>
+            <p>Continue your learning journey and achieve your goals</p>
+        </div>
+
+        <!-- Learning Streak -->
+        <div class="learning-streak animate-slide-up" style="animation-delay: 0.1s;">
+            <div class="streak-number">🔥 7</div>
+            <div class="streak-label">Day Learning Streak</div>
+            <p class="streak-message">Keep it up! You're on fire!</p>
+        </div>
+
+        <!-- Dashboard Stats Grid -->
+        <div class="dashboard-grid animate-slide-up" style="animation-delay: 0.2s;">
+            <div class="dashboard-card">
+                <div class="dashboard-card-icon">📚</div>
+                <div class="dashboard-card-value">{{ user.enrollments.count }}</div>
+                <div class="dashboard-card-label">Enrolled Courses</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="dashboard-card-icon">✅</div>
+                <div class="dashboard-card-value">{{ completed_count|default:0 }}</div>
+                <div class="dashboard-card-label">Completed Courses</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="dashboard-card-icon">📊</div>
+                <div class="dashboard-card-value">{{ user.enrollments.count|default:0 }}</div>
+                <div class="dashboard-card-label">In Progress</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="dashboard-card-icon">🏆</div>
+                <div class="dashboard-card-value">{{ certificates_count|default:0 }}</div>
+                <div class="dashboard-card-label">Certificates Earned</div>
+            </div>
+        </div>
+
+        <!-- My Enrolled Courses -->
+        <div class="dashboard-section animate-slide-up" style="animation-delay: 0.3s;">
+            <h2>📚 My Enrolled Courses</h2>
+            <div class="course-grid">
+                {% for enrollment in user.enrollments.all %}
+                    <article class="course-card animate-slide-up" style="animation-delay: {{ forloop.counter|add:4 }}00.1s;">
+                        {% if enrollment.course.thumbnail %}
+                            <img src="{{ enrollment.course.thumbnail.url }}" alt="{{ enrollment.course.title }}" class="course-thumbnail" loading="lazy">
+                        {% else %}
+                            <div class="course-thumbnail placeholder">📚</div>
+                        {% endif %}
+                        <div class="course-info">
+                            <div class="course-meta">
+                                <span class="badge badge-primary">{{ enrollment.course.category.name|default:"General" }}</span>
+                                <span class="badge badge-info">{{ enrollment.course.get_level_display }}</span>
+                            </div>
+                            <h3>{{ enrollment.course.title }}</h3>
+                            <p>{{ enrollment.course.description|truncatewords:12 }}</p>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ enrollment.progress|default:0 }}%"></div>
+                                </div>
+                                <span class="progress-text">{{ enrollment.progress|default:0 }}% Complete</span>
+                            </div>
+                            <a href="{% url 'course_learning' enrollment.course.id %}" class="btn btn-primary btn-full">Continue Learning</a>
+                        </div>
+                    </article>
+                {% empty %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📚</div>
+                        <h3>No courses enrolled yet</h3>
+                        <p>Start your learning journey by enrolling in a course today.</p>
+                        <a href="{% url 'course_list' %}" class="btn btn-primary btn-lg animate-scale-in">Browse Courses</a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="dashboard-section animate-slide-up" style="animation-delay: 0.4s;">
+            <h2>📈 Recent Activity</h2>
+            <div class="activity-list">
+                <div class="activity-item">
+                    <div class="activity-icon">📹</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Watched "Introduction to Python"</div>
+                        <div class="activity-time">2 hours ago</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon">✅</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Completed "Web Development Basics"</div>
+                        <div class="activity-time">Yesterday</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon">📝</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Passed Quiz with 85% score</div>
+                        <div class="activity-time">2 days ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Explore More Courses -->
+        <div class="dashboard-section animate-slide-up" style="animation-delay: 0.5s;">
+            <h2>🚀 Explore More Courses</h2>
+            <p>Discover new skills and advance your career with our comprehensive course catalog.</p>
+            <a href="{% url 'course_list' %}" class="btn btn-primary btn-lg animate-scale-in">Browse All Courses</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-page {
+    padding: var(--spacing-xl) 0;
+}
+
+.dashboard-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.dashboard-header h1 {
+    font-size: var(--text-4xl);
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.dashboard-header p {
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+}
+
+.streak-message {
+    font-size: var(--text-base);
+    opacity: 0.9;
+    margin-top: var(--spacing-sm);
+}
+
+.dashboard-section {
+    margin-top: var(--spacing-2xl);
+}
+
+.dashboard-section h2 {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+}
+
+.dashboard-section p {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.6;
+}
+
+.progress-container {
+    margin: var(--spacing-md) 0;
+}
+
+.progress-text {
+    display: block;
+    text-align: right;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    margin-top: var(--spacing-xs);
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-3xl);
+    color: var(--text-secondary);
+}
+
+.empty-state-icon {
+    font-size: 5rem;
+    margin-bottom: var(--spacing-lg);
+}
+
+.empty-state h3 {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.empty-state p {
+    font-size: var(--text-base);
+    margin-bottom: var(--spacing-xl);
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--bg-card);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-normal);
+}
+
+.activity-item:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-md);
+}
+
+.activity-icon {
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-full);
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-title {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.activity-time {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin-top: var(--spacing-xs);
+}
+
+@media (max-width: 768px) {
+    .dashboard-header h1 {
+        font-size: var(--text-2xl);
+    }
+    
+    .dashboard-section h2 {
+        font-size: var(--text-xl);
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+

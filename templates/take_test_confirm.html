@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Start Test - {{ test.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="auth-box bounce-in">
+        <h1>Test Confirmation</h1>
+        <h2>{{ test.title }}</h2>
+        
+        <div class="test-info">
+            <p><strong>Total Attempts Allowed:</strong> {{ test.max_attempts }}</p>
+            <p><strong>Attempts Used:</strong> {{ attempts }}</p>
+            <p><strong>Remaining Attempts:</strong> {{ remaining_attempts }}</p>
+            <p><strong>Total Questions:</strong> {{ total_questions }}</p>
+            <p><strong>Total Marks:</strong> {{ total_marks }}</p>
+            <p><strong>Time Per Question:</strong> {{ time_per_question }} seconds</p>
+        </div>
+        
+        <div class="test-warning">
+            <p>⚠️ Once you start the test, you cannot pause or restart. Make sure you have a stable internet connection.</p>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-full">Start Test</button>
+            <a href="{% url 'course_detail' test.course.id %}" class="btn btn-secondary btn-full">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

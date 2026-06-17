@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Live Stream - {{ video.title }} - E-Learning Platform{% endblock %}
+
+{% block content %}
+<div class="live-stream-page">
+    <div class="container">
+        <div class="live-header">
+            <div class="live-badge-large">🔴 LIVE</div>
+            <h1>{{ video.title }}</h1>
+            <p>{{ video.description }}</p>
+        </div>
+        
+        <div class="live-player">
+            <div class="video-container">
+                <div class="video-protection-badge">🔒 Protected Video - Stream Only</div>
+                <video controls autoplay id="live-video" width="100%" style="max-height: 600px;" oncontextmenu="return false;" controlsList="nodownload">
+                    <source src="{% url 'protected_video_stream' video.id %}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            
+            <div class="live-chat">
+                <h3>Live Chat</h3>
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-message">
+                        <span class="chat-user">System:</span>
+                        <span class="chat-text">Welcome to the live stream!</span>
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="message-input" placeholder="Type your message...">
+                    <button id="send-message" class="btn btn-primary">Send</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="live-info">
+            <h3>Stream Information</h3>
+            <p><strong>Course:</strong> {{ video.course.title }}</p>
+            <p><strong>Instructor:</strong> {{ video.course.instructor.username }}</p>
+            <p><strong>Started at:</strong> {% now "F j, Y, g:i a" %}</p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const video = document.getElementById('live-video');
+    
+    if (video) {
+        // Disable seeking - prevent user from changing video position
+        let isPlaying = false;
+        let lastValidTime = 0;
+        
+        video.addEventListener('play', function() {
+            isPlaying = true;
+            lastValidTime = video.currentTime;
+        });
+        
+        video.addEventListener('pause', function() {
+            isPlaying = false;
+        });
+        
+        video.addEventListener('seeking', function(e) {
+            // Only prevent seeking if video is playing and user is trying to seek
+            if (isPlaying && Math.abs(video.currentTime - lastValidTime) > 0.5) {
+                // Revert to the position before seeking
+                video.currentTime = lastValidTime;
+            }
+        });
+        
+        video.addEventListener('timeupdate', function() {
+            // Update last valid time during normal playback
+            if (isPlaying) {
+                lastValidTime = video.currentTime;
+            }
+        });
+        
+        // Prevent seeking with arrow keys
+        video.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.preventDefault();
+            }
+        });
+    }
+});
+
+document.getElementById('send-message').addEventListener('click', function() {
+    const input = document.getElementById('message-input');
+    const message = input.value.trim();
+    
+    if (message) {
+        const chatMessages = document.getElementById('chat-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-message';
+        messageDiv.innerHTML = `
+            <span class="chat-user">{{ user.username }}:</span>
+            <span class="chat-text">${message}</span>
+        `;
+        chatMessages.appendChild(messageDiv);
+        input.value = '';
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+});
+
+document.getElementById('message-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('send-message').click();
+    }
+});
+</script>
+{% endblock %}

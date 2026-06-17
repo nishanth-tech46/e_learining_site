@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Test Result - {{ attempt.test.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Test Result</h1>
+    <h2>{{ attempt.test.title }}</h2>
+    
+    <div class="result-summary">
+        <p><strong>Score:</strong> {{ attempt.score }}%</p>
+        <p><strong>Correct Answers:</strong> {{ attempt.correct_answers }} / {{ attempt.total_questions }}</p>
+        <p><strong>Status:</strong> 
+            {% if attempt.is_passed %}
+                <span class="badge badge-success">Passed</span>
+            {% else %}
+                <span class="badge badge-danger">Failed</span>
+            {% endif %}
+        </p>
+        <p><strong>Started:</strong> {{ attempt.started_at }}</p>
+        <p><strong>Completed:</strong> {{ attempt.completed_at }}</p>
+    </div>
+    
+    <h3>Your Answers</h3>
+    <div class="user-answers">
+        {% for user_answer in attempt.user_answers.all %}
+            <div class="answer-item">
+                <h4>{{ user_answer.question.question_text }}</h4>
+                <p><strong>Your Answer:</strong> {{ user_answer.selected_answer.answer_text }}</p>
+                <p><strong>Correct:</strong> 
+                    {% if user_answer.is_correct %}
+                        <span class="badge badge-success">Yes</span>
+                    {% else %}
+                        <span class="badge badge-danger">No</span>
+                    {% endif %}
+                </p>
+                {% if not user_answer.is_correct %}
+                    <p><strong>Correct Answer:</strong> 
+                        {% for answer in user_answer.question.answers.all %}
+                            {% if answer.is_correct %}
+                                {{ answer.answer_text }}
+                            {% endif %}
+                        {% endfor %}
+                    </p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+    
+    <a href="{% url 'course_learning' attempt.test.course.id %}" class="btn btn-primary">Back to Course</a>
+</div>
+{% endblock %}

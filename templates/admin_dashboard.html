@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - E-Learning Platform{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <div class="container">
+        <div class="admin-header">
+            <h1>Admin Dashboard</h1>
+            <p>Manage courses, videos, and content</p>
+        </div>
+        
+        <div class="admin-stats">
+            <div class="stat-card">
+                <div class="stat-icon">📚</div>
+                <div class="stat-info">
+                    <h3>Total Courses  </h3>
+                    <p>{{ courses.count }} +</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-info">
+                    <h3>Total Users </h3>
+                    <p>{{ users.count }} +</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📹</div>
+                <div class="stat-info">
+                    <h3>Total Videos </h3>
+                    <p>{{ videos.count }} +</p>
+                </div>
+            </div>
+            <!-- Payment feature - commented out for now
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-info">
+                    <h3>Total Revenue</h3>
+                    <p>${{ total_revenue }}</p>
+                </div>
+            </div>
+            -->
+        </div>
+        
+        <div class="admin-actions">
+            <div class="action-card">
+                <h3>Course Management</h3>
+                <p>Create and manage courses</p>
+                <a href="{% url 'admin_course_list' %}" class="btn btn-primary">Manage Courses</a>
+            </div>
+            <div class="action-card">
+                <h3>Create New Course</h3>
+                <p>Start creating a new course</p>
+                <a href="{% url 'admin_course_create' %}" class="btn btn-secondary">Create Course</a>
+            </div>
+            <div class="action-card">
+                <h3>User Management</h3>
+                <p>View and manage users</p>
+                <a href="/admin/secondapp/user/" class="btn btn-secondary">Manage Users</a>
+            </div>
+        </div>
+        
+        <div class="admin-section">
+            <h2>Recent Activity</h2>
+            <div class="activity-list">
+                <p>Recent enrollments and course activities will appear here.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

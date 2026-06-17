@@ -1,0 +1,386 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - E-Learning Platform{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section animate-slide-up">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-illustration">🎓</div>
+            <h1 class="hero-title">Transform Your Future with Expert-Led Learning</h1>
+            <p class="hero-subtitle">Join thousands of students mastering new skills with our comprehensive courses</p>
+            <div class="hero-buttons">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'course_list' %}" class="btn btn-primary btn-lg animate-scale-in">Browse Courses</a>
+                {% else %}
+                    <a href="{% url 'register' %}" class="btn btn-primary btn-lg animate-scale-in">Get Started Free</a>
+                    <a href="{% url 'login' %}" class="btn btn-secondary btn-lg animate-scale-in">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card animate-slide-up" style="animation-delay: 0.1s;">
+                <div class="stat-icon">📚</div>
+                <div class="stat-number">500+</div>
+                <div class="stat-label">Total Courses</div>
+            </div>
+            <div class="stat-card animate-slide-up" style="animation-delay: 0.2s;">
+                <div class="stat-icon">👨‍🎓</div>
+                <div class="stat-number">10K+</div>
+                <div class="stat-label">Total Students</div>
+            </div>
+            <div class="stat-card animate-slide-up" style="animation-delay: 0.3s;">
+                <div class="stat-icon">👨‍🏫</div>
+                <div class="stat-number">100+</div>
+                <div class="stat-label">Expert Instructors</div>
+            </div>
+            <div class="stat-card animate-slide-up" style="animation-delay: 0.4s;">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-number">5K+</div>
+                <div class="stat-label">Certificates Issued</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Courses Section -->
+<section class="featured-courses">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="animate-slide-up">Featured Courses</h2>
+            <p class="animate-slide-up">Explore our most popular courses and start learning today</p>
+        </div>
+        <div class="course-grid">
+            {% for course in featured_courses|slice:":6" %}
+                <article class="course-card animate-slide-up" style="animation-delay: {{ forloop.counter|add:5 }}00.1s;">
+                    {% if course.thumbnail %}
+                        <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" class="course-thumbnail" loading="lazy">
+                    {% else %}
+                        <div class="course-thumbnail placeholder">📚</div>
+                    {% endif %}
+                    <div class="course-info">
+                        <div class="course-meta">
+                            <span class="badge badge-primary">{{ course.category.name|default:"General" }}</span>
+                            <span class="badge badge-info">{{ course.get_level_display }}</span>
+                        </div>
+                        <h3>{{ course.title }}</h3>
+                        <p class="instructor">By {{ course.instructor.username }}</p>
+                        <p>{{ course.description|truncatewords:12 }}</p>
+                        <div class="course-footer">
+                            <span class="duration">⏱️ {{ course.duration|default:"N/A" }}</span>
+                            <span class="price">₹{{ course.price }}</span>
+                        </div>
+                        <div class="course-actions">
+                            <a href="{% url 'course_detail' course.id %}" class="btn btn-primary btn-full">View Details</a>
+                        </div>
+                    </div>
+                </article>
+            {% empty %}
+                <p class="text-center">No featured courses available.</p>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{% url 'course_list' %}" class="btn btn-secondary btn-lg animate-scale-in">View All Courses</a>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="animate-slide-up">Why Choose Our Platform?</h2>
+            <p class="animate-slide-up">Experience the best in online education with our comprehensive features</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card animate-slide-up" style="animation-delay: 0.1s;">
+                <div class="feature-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <defs>
+                            <linearGradient id="gradient-primary" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <video></video>
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                </div>
+                <h3>High Quality Videos</h3>
+                <p>Expert-led video courses with 4K quality production</p>
+            </div>
+            <div class="feature-card animate-slide-up" style="animation-delay: 0.2s;">
+                <div class="feature-icon-wrapper">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <broadcast></broadcast>
+                            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                            <line x1="4" y1="22" x2="4" y2="15"></line>
+                        </svg>
+                    </div>
+                    <div class="live-badge">LIVE</div>
+                </div>
+                <h3>Live Sessions</h3>
+                <p>Interactive live streaming with real-time Q&A sessions</p>
+            </div>
+            <div class="feature-card animate-slide-up" style="animation-delay: 0.3s;">
+                <div class="feature-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <download></download>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </div>
+                <h3>Downloadable Resources</h3>
+                <p>Access PDFs, slides, and supplementary materials</p>
+            </div>
+            <div class="feature-card animate-slide-up" style="animation-delay: 0.4s;">
+                <div class="feature-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <users></users>
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+                <h3>Expert Instructors</h3>
+                <p>Learn from industry professionals and thought leaders</p>
+            </div>
+            <div class="feature-card animate-slide-up" style="animation-delay: 0.5s;">
+                <div class="feature-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <smartphone></smartphone>
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                    </svg>
+                </div>
+                <h3>Mobile Learning</h3>
+                <p>Access courses anytime, anywhere on any device</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-card animate-slide-up">
+            <h2>Ready to Start Your Learning Journey?</h2>
+            <p>Join thousands of students already learning on our platform and transform your career</p>
+            <a href="{% url 'register' %}" class="btn btn-primary btn-lg animate-scale-in">Create Free Account</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+<style>
+.hero-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: var(--spacing-2xl);
+}
+
+.section-header h2 {
+    font-size: var(--text-4xl);
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.section-header p {
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+}
+
+.featured-courses {
+    padding: var(--spacing-2xl) 0;
+}
+
+.features-section {
+    padding: var(--spacing-3xl) 0;
+    background: var(--bg-secondary);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-xl);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.features-grid .feature-card:nth-child(4),
+.features-grid .feature-card:nth-child(5) {
+    grid-column: span 1;
+}
+
+.features-grid .feature-card:nth-child(4) {
+    grid-column: 2 / 3;
+}
+
+.feature-card {
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: var(--spacing-2xl);
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-color);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-primary);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 30px rgba(99, 102, 241, 0.1);
+}
+
+.feature-card:hover::before {
+    opacity: 1;
+}
+
+.feature-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-lg);
+    transition: transform 0.3s ease;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.feature-card:hover .feature-icon {
+    transform: scale(1.15) rotate(5deg);
+}
+
+.feature-card h3 {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+    transition: color 0.3s ease;
+}
+
+.feature-card:hover h3 {
+    color: var(--primary-color);
+}
+
+.feature-card p {
+    color: var(--text-secondary);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    transition: color 0.3s ease;
+}
+
+.feature-card:hover p {
+    color: var(--text-primary);
+}
+
+/* Tablet Layout - 2 cards per row */
+@media (max-width: 1024px) {
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .features-grid .feature-card:nth-child(4) {
+        grid-column: auto;
+    }
+}
+
+/* Mobile Layout - 1 card per row */
+@media (max-width: 768px) {
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+    
+    .feature-card {
+        padding: var(--spacing-xl);
+        min-height: 180px;
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+    }
+    
+    .feature-card h3 {
+        font-size: var(--text-lg);
+    }
+    
+    .feature-card p {
+        font-size: var(--text-sm);
+    }
+    
+    .section-header h2 {
+        font-size: var(--text-2xl);
+    }
+}
+
+.cta-section {
+    padding: var(--spacing-2xl) 0;
+}
+
+.cta-card {
+    background: var(--gradient-hero);
+    color: var(--text-inverse);
+    padding: var(--spacing-3xl);
+    border-radius: var(--radius-2xl);
+    text-align: center;
+    box-shadow: var(--shadow-xl);
+}
+
+.cta-card h2 {
+    font-size: var(--text-3xl);
+    font-weight: 800;
+    margin-bottom: var(--spacing-md);
+}
+
+.cta-card p {
+    font-size: var(--text-lg);
+    margin-bottom: var(--spacing-xl);
+    opacity: 0.95;
+}
+
+@media (max-width: 768px) {
+    .section-header h2 {
+        font-size: var(--text-2xl);
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .cta-card h2 {
+        font-size: var(--text-2xl);
+    }
+}
+</style>

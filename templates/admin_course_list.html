@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin - Courses - E-Learning Platform{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="container">
+        <div class="admin-header">
+            <h1>Manage Courses</h1>
+            <a href="{% url 'admin_course_create' %}" class="btn btn-primary">Create New Course</a>
+        </div>
+        
+        <div class="admin-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Videos</th>
+                        <th>Enrollments</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in courses %}
+                        <tr>
+                            <td>{{ course.title }}</td>
+                            <td>{{ course.category.name|default:"-" }}</td>
+                            <td>${{ course.price }}</td>
+                            <td>
+                                {% if course.is_published %}
+                                    <span class="status published">Published</span>
+                                {% else %}
+                                    <span class="status draft">Draft</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ course.videos.count }}</td>
+                            <td>{{ course.enrollments.count }}</td>
+                            <td>
+                                <a href="{% url 'admin_course_detail' course.id %}" class="btn btn-sm btn-secondary">View</a>
+                                <a href="{% url 'admin_course_edit' course.id %}" class="btn btn-sm btn-primary">Edit</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7">No courses found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

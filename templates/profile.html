@@ -1,0 +1,438 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - E-Learning Platform{% endblock %}
+
+{% block content %}
+<div class="profile-container animate-slide-up">
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="profile-photo-container">
+                {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="profile-picture animate-scale-in" loading="lazy">
+                {% else %}
+                    <div class="profile-picture placeholder animate-scale-in">👤</div>
+                {% endif %}
+                <div class="profile-photo-actions">
+                    <button onclick="uploadProfilePhoto()" class="btn-photo btn-upload" title="Change Photo">📷</button>
+                    {% if user.profile_picture %}
+                        <button onclick="confirmRemoveProfilePhoto()" class="btn-photo btn-remove" title="Remove Photo">🗑️</button>
+                    {% endif %}
+                </div>
+            </div>
+            <h2 class="profile-name animate-slide-up">{{ user.username }}</h2>
+            <p class="profile-email animate-slide-up">{{ user.email }}</p>
+        </div>
+        
+        <div class="profile-info animate-slide-up">
+            <div class="profile-info-item">
+                <div class="profile-info-label">First Name</div>
+                <div class="profile-info-value">{{ user.first_name|default:"Not set" }}</div>
+            </div>
+            <div class="profile-info-item">
+                <div class="profile-info-label">Last Name</div>
+                <div class="profile-info-value">{{ user.last_name|default:"Not set" }}</div>
+            </div>
+            <div class="profile-info-item">
+                <div class="profile-info-label">Username</div>
+                <div class="profile-info-value">{{ user.username }}</div>
+            </div>
+            <div class="profile-info-item">
+                <div class="profile-info-label">Email</div>
+                <div class="profile-info-value">{{ user.email }}</div>
+            </div>
+            <div class="profile-info-item">
+                <div class="profile-info-label">Phone Number</div>
+                <div class="profile-info-value">{{ user.phone_number|default:"Not set" }}</div>
+            </div>
+            <div class="profile-info-item">
+                <div class="profile-info-label">Date of Birth</div>
+                <div class="profile-info-value">{% if user.date_of_birth %}{{ user.date_of_birth|date:"F d, Y" }}{% else %}Not set{% endif %}</div>
+            </div>
+            <div class="profile-info-item">
+                <div class="profile-info-label">Ambition</div>
+                <div class="profile-info-value">{{ user.ambition|default:"Not set" }}</div>
+            </div>
+            <div class="profile-info-item">
+                <div class="profile-info-label">Hobbies</div>
+                <div class="profile-info-value">{{ user.hobbies|default:"Not set" }}</div>
+            </div>
+        </div>
+        
+        <div class="profile-actions animate-slide-up">
+            <button onclick="toggleEditForm()" class="btn btn-primary btn-lg">Edit Profile</button>
+            <a href="{% url 'logout' %}" onclick="return confirmLogout(event)" class="btn btn-secondary btn-lg">Logout</a>
+        </div>
+        
+        <!-- Edit Form (Hidden by default) -->
+        <div class="edit-form-container" id="edit-form-container" style="display: none;">
+            <h3>Edit Profile</h3>
+            <form method="post" class="edit-form" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="first_name">First Name</label>
+                    <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}" placeholder="First Name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="last_name">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" value="{{ user.last_name }}" placeholder="Last Name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="date_of_birth">Date of Birth</label>
+                    <input type="date" id="date_of_birth" name="date_of_birth" value="{% if user.date_of_birth %}{{ user.date_of_birth|date:'Y-m-d' }}{% endif %}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="ambition">Ambition</label>
+                    <textarea id="ambition" name="ambition" rows="3" placeholder="Your career goals or ambitions">{{ user.ambition }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="hobbies">Hobbies</label>
+                    <textarea id="hobbies" name="hobbies" rows="3" placeholder="Your hobbies (comma-separated)">{{ user.hobbies }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="profile_picture">Profile Picture</label>
+                    <input type="file" id="profile_picture" name="profile_picture" accept="image/*">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
+                    <button type="button" onclick="toggleEditForm()" class="btn btn-secondary btn-lg">Cancel</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="profile-footer animate-slide-up">
+            <a href="#" onclick="return confirmDeleteAccount();" class="delete-account">Delete Account</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleEditForm() {
+    const formContainer = document.getElementById('edit-form-container');
+    if (formContainer.style.display === 'none') {
+        formContainer.style.display = 'block';
+        formContainer.scrollIntoView({ behavior: 'smooth' });
+    } else {
+        formContainer.style.display = 'none';
+    }
+}
+
+function uploadProfilePhoto() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const formData = new FormData();
+            formData.append('profile_photo', file);
+            
+            fetch("{% url 'upload_profile_photo' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            }).then(response => response.json()).then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Profile photo uploaded successfully',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to upload photo'
+                    });
+                }
+            });
+        }
+    };
+    input.click();
+}
+
+function confirmRemoveProfilePhoto() {
+    Swal.fire({
+        title: 'Delete Profile Photo',
+        text: 'Do you want to delete your profile photo?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes Delete',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            fetch("{% url 'remove_profile_photo' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            }).then(response => response.json()).then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Photo Deleted',
+                        text: 'Your profile photo has been removed successfully.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to remove photo'
+                    });
+                }
+            });
+        }
+    });
+}
+</script>
+
+<style>
+.profile-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: var(--spacing-xl) 0;
+}
+
+.profile-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-2xl);
+    padding: var(--spacing-2xl);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--border-color);
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+}
+
+.profile-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.profile-photo-container {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-photo-actions {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.btn-photo {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    border: 2px solid var(--bg-card);
+    background: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-base);
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-photo:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-remove {
+    background: var(--danger-color);
+}
+
+.profile-picture {
+    width: 120px;
+    height: 120px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    border: 4px solid var(--primary-color);
+    margin: 0 auto var(--spacing-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+.profile-picture.placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: var(--radius-full);
+    background: var(--gradient-primary);
+    border: 4px solid var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    margin: 0 auto var(--spacing-lg);
+}
+
+.profile-name {
+    font-size: var(--text-3xl);
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.profile-email {
+    font-size: var(--text-base);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.profile-info {
+    display: grid;
+    gap: var(--spacing-md);
+    text-align: left;
+    margin-bottom: var(--spacing-xl);
+}
+
+.profile-info-item {
+    background: var(--bg-secondary);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-normal);
+}
+
+.profile-info-item:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-md);
+}
+
+.profile-info-label {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+.profile-info-value {
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.profile-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
+}
+
+.edit-form-container {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-xl);
+    border-top: 2px solid var(--border-color);
+    text-align: left;
+}
+
+.edit-form-container h3 {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+}
+
+.edit-form .form-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.edit-form label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+}
+
+.edit-form input,
+.edit-form textarea {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    font-size: var(--text-base);
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    transition: all var(--transition-fast);
+}
+
+.edit-form input:focus,
+.edit-form textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    margin-top: var(--spacing-lg);
+}
+
+.profile-footer {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+}
+
+.delete-account {
+    color: var(--danger-color);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: var(--text-sm);
+    transition: all var(--transition-fast);
+}
+
+.delete-account:hover {
+    text-decoration: underline;
+    opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+    .profile-card {
+        padding: var(--spacing-lg);
+    }
+    
+    .profile-name {
+        font-size: var(--text-2xl);
+    }
+    
+    .profile-actions {
+        flex-direction: column;
+    }
+    
+    .profile-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

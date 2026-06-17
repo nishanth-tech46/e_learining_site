@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if action == 'Create' %}Create Course{% else %}Edit Course{% endif %} - E-Learning Platform{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="container">
+        <div class="admin-header">
+            <h1>{% if action == 'Create' %}Create New Course{% else %}Edit Course{% endif %}</h1>
+            <a href="{% if action == 'Create' %}{% url 'admin_course_list' %}{% else %}{% url 'admin_course_detail' course.id %}{% endif %}" class="btn btn-secondary">Cancel</a>
+        </div>
+        
+        <div class="admin-form">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="{{ form.title.id_for_label }}">Title:</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="error">{{ form.title.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.description.id_for_label }}">Description:</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="error">{{ form.description.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.category.id_for_label }}">Category:</label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                        <div class="error">{{ form.category.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.thumbnail.id_for_label }}">Thumbnail:</label>
+                    {{ form.thumbnail }}
+                    {% if form.thumbnail.errors %}
+                        <div class="error">{{ form.thumbnail.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.price.id_for_label }}">Price:</label>
+                    {{ form.price }}
+                    {% if form.price.errors %}
+                        <div class="error">{{ form.price.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.is_published.id_for_label }}">Published:</label>
+                    {{ form.is_published }}
+                    {% if form.is_published.errors %}
+                        <div class="error">{{ form.is_published.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="btn btn-primary">{% if action == 'Create' %}Create Course{% else %}Update Course{% endif %}</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

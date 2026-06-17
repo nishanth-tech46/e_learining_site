@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Answer - {{ answer.answer_text|truncatewords:10 }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Edit Answer</h1>
+    <p><strong>Question:</strong> {{ answer.question.question_text }}</p>
+    <p><strong>Current Answer:</strong> {{ answer.answer_text }}</p>
+    <p><strong>Last Modified:</strong> {{ answer.updated_at }}</p>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.answer_text.id_for_label }}">Answer:</label>
+            {{ form.answer_text }}
+            {% if form.answer_text.errors %}
+                <div class="error">{{ form.answer_text.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.is_correct.id_for_label }}">Is Correct:</label>
+            {{ form.is_correct }}
+            {% if form.is_correct.errors %}
+                <div class="error">{{ form.is_correct.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.order.id_for_label }}">Order:</label>
+            {{ form.order }}
+            {% if form.order.errors %}
+                <div class="error">{{ form.order.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Update Answer</button>
+        <a href="{% url 'test_detail' answer.question.test.id %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

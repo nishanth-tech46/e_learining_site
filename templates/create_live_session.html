@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Live Session - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Create Live Session for {{ course.title }}</h1>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">Session Title:</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+                <div class="error">{{ form.title.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">Description:</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+                <div class="error">{{ form.description.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.stream_url.id_for_label }}">Stream URL:</label>
+            {{ form.stream_url }}
+            {% if form.stream_url.errors %}
+                <div class="error">{{ form.stream_url.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.scheduled_at.id_for_label }}">Scheduled At:</label>
+            {{ form.scheduled_at }}
+            {% if form.scheduled_at.errors %}
+                <div class="error">{{ form.scheduled_at.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.duration.id_for_label }}">Duration (minutes):</label>
+            {{ form.duration }}
+            {% if form.duration.errors %}
+                <div class="error">{{ form.duration.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.is_active.id_for_label }}">Is Active:</label>
+            {{ form.is_active }}
+            {% if form.is_active.errors %}
+                <div class="error">{{ form.is_active.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.day.id_for_label }}">Day:</label>
+            {{ form.day }}
+            {% if form.day.errors %}
+                <div class="error">{{ form.day.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Create Live Session</button>
+        <a href="{% url 'admin_course_detail' course.id %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
