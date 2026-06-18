@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}My Recent Activity{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>My Recent Activity</h1>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
+    </div>
+
+    <div class="activities-container">
+        {% if activities %}
+            <div class="activities-list">
+                {% for activity in activities %}
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            {% if activity.activity_type == 'watched_video' %}
+                                🎥
+                            {% elif activity.activity_type == 'completed_lesson' %}
+                                ✅
+                            {% elif activity.activity_type == 'enrolled_course' %}
+                                📚
+                            {% elif activity.activity_type == 'started_test' %}
+                                📝
+                            {% elif activity.activity_type == 'completed_test' %}
+                                🏆
+                            {% elif activity.activity_type == 'viewed_course' %}
+                                👁️
+                            {% elif activity.activity_type == 'downloaded_resource' %}
+                                📥
+                            {% elif activity.activity_type == 'logged_in' %}
+                                🔐
+                            {% elif activity.activity_type == 'registered' %}
+                                🆔
+                            {% else %}
+                                📌
+                            {% endif %}
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-type">{{ activity.get_activity_type_display }}</div>
+                            <div class="activity-description">{{ activity.description }}</div>
+                            <div class="activity-meta">
+                                {% if activity.course %}
+                                    <span class="activity-course">{{ activity.course.title }}</span>
+                                {% endif %}
+                                <span class="activity-time">{{ activity.get_relative_time }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-activities">
+                <p>No recent activity found.</p>
+                <a href="{% url 'course_list' %}" class="btn btn-primary">Browse Courses</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.activities-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.activities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.activity-item {
+    display: flex;
+    gap: 15px;
+    background: var(--bg-card);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-normal);
+}
+
+.activity-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-md);
+}
+
+.activity-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-full);
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-type {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 5px;
+    font-size: var(--text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.activity-description {
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    font-size: var(--text-base);
+}
+
+.activity-meta {
+    display: flex;
+    gap: 15px;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+.activity-course {
+    font-weight: 500;
+}
+
+.no-activities {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+}
+
+.no-activities p {
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    font-size: var(--text-lg);
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+}
+</style>
+{% endblock %}

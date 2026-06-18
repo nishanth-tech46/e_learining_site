@@ -55,6 +55,49 @@
                 </div>
                 
                 <div class="form-group">
+                    <label for="{{ form.duration.id_for_label }}">Duration:</label>
+                    {{ form.duration }}
+                    <small>e.g., "8 weeks" or "40 hours"</small>
+                    {% if form.duration.errors %}
+                        <div class="error">{{ form.duration.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.level.id_for_label }}">Level:</label>
+                    {{ form.level }}
+                    {% if form.level.errors %}
+                        <div class="error">{{ form.level.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.lessons_count.id_for_label }}">Lessons Count:</label>
+                    {{ form.lessons_count }}
+                    {% if form.lessons_count.errors %}
+                        <div class="error">{{ form.lessons_count.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.learning_outcomes.id_for_label }}">Learning Outcomes:</label>
+                    {{ form.learning_outcomes }}
+                    <small>Enter each learning outcome on a new line</small>
+                    {% if form.learning_outcomes.errors %}
+                        <div class="error">{{ form.learning_outcomes.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.requirements.id_for_label }}">Requirements:</label>
+                    {{ form.requirements }}
+                    <small>Enter each requirement on a new line</small>
+                    {% if form.requirements.errors %}
+                        <div class="error">{{ form.requirements.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
                     <label for="{{ form.is_published.id_for_label }}">Published:</label>
                     {{ form.is_published }}
                     {% if form.is_published.errors %}

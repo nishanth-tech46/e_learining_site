@@ -24,7 +24,8 @@
         <!-- 2-Column Layout -->
         <div class="learning-layout animate-slide-up">
             <!-- Left Sidebar - Course Content -->
-            <aside class="learning-sidebar">
+            <aside class="learning-sidebar" id="learning-sidebar">
+                <div class="resize-handle" id="resize-handle"></div>
                 <div class="course-sidebar">
                     <h3 class="sidebar-title">📚 Course Content</h3>
                     
@@ -56,12 +57,14 @@
                                     <div class="lesson-group">
                                         <span class="lesson-group-title">📄 Resources</span>
                                         {% for file in day_content.files %}
-                                            <div class="lesson-item">
+                                            <div class="lesson-item resource-item">
                                                 <div class="lesson-content">
-                                                    <span class="lesson-icon">📄</span>
-                                                    <span class="lesson-text">{{ file.title }}</span>
-                                                    <span class="badge badge-secondary">{{ file.get_file_type_display }}</span>
-                                                    <span class="badge badge-warning">🔒 View Only</span>
+                                                    <div class="resource-info">
+                                                        <span class="lesson-icon">📄</span>
+                                                        <span class="lesson-text">{{ file.title }}</span>
+                                                        <span class="badge badge-secondary">{{ file.get_file_type_display }}</span>
+                                                        <span class="badge badge-warning">🔒 View Only</span>
+                                                    </div>
                                                 </div>
                                                 <a href="{% url 'view_file' file.id %}" target="_blank" class="btn btn-sm btn-secondary">View</a>
                                             </div>
@@ -73,11 +76,13 @@
                                     <div class="lesson-group">
                                         <span class="lesson-group-title">📝 Tests</span>
                                         {% for test in day_content.tests %}
-                                            <div class="lesson-item">
+                                            <div class="lesson-item test-item">
                                                 <div class="lesson-content">
-                                                    <span class="lesson-icon">📝</span>
-                                                    <span class="lesson-text">{{ test.title }}</span>
-                                                    <span class="lesson-meta">{{ test.duration }} min</span>
+                                                    <div class="test-info">
+                                                        <span class="lesson-icon">📝</span>
+                                                        <span class="lesson-text">{{ test.title }}</span>
+                                                        <span class="lesson-meta">{{ test.duration }} min</span>
+                                                    </div>
                                                 </div>
                                                 <a href="{% url 'take_test' test.id %}" class="btn btn-sm btn-primary">Take Test</a>
                                             </div>
@@ -172,6 +177,57 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Sidebar resize functionality
+    const sidebar = document.getElementById('learning-sidebar');
+    const resizeHandle = document.getElementById('resize-handle');
+    const learningLayout = document.querySelector('.learning-layout');
+    
+    // Load saved width from localStorage
+    const savedWidth = localStorage.getItem('sidebarWidth');
+    if (savedWidth) {
+        const width = Math.max(300, Math.min(500, parseInt(savedWidth)));
+        learningLayout.style.setProperty('--sidebar-width', width + 'px');
+    }
+    
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = 0;
+    
+    resizeHandle.addEventListener('mousedown', function(e) {
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = sidebar.offsetWidth;
+        resizeHandle.classList.add('active');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+    });
+    
+    document.addEventListener('mousemove', function(e) {
+        if (!isResizing) return;
+        
+        const dx = e.clientX - startX;
+        let newWidth = startWidth + dx;
+        
+        // Constrain width between min and max
+        newWidth = Math.max(300, Math.min(500, newWidth));
+        
+        learningLayout.style.setProperty('--sidebar-width', newWidth + 'px');
+    });
+    
+    document.addEventListener('mouseup', function() {
+        if (isResizing) {
+            isResizing = false;
+            resizeHandle.classList.remove('active');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            
+            // Save width to localStorage
+            const currentWidth = sidebar.offsetWidth;
+            localStorage.setItem('sidebarWidth', currentWidth);
+        }
+    });
+    
+    // Video player functionality
     const video = document.getElementById('main-video');
     const progressForm = document.getElementById('progress-form');
     const watchedDurationInput = document.getElementById('watched-duration');
@@ -401,6 +457,49 @@ function toggleModule(moduleId) {
     margin-bottom: var(--spacing-lg);
 }
 
+.learning-layout {
+    display: grid;
+    grid-template-columns: var(--sidebar-width, 380px) 1fr;
+    gap: var(--spacing-xl);
+    align-items: start;
+}
+
+.learning-sidebar {
+    position: sticky;
+    top: var(--spacing-xl);
+    max-height: calc(100vh - var(--spacing-xl) * 2);
+    overflow-y: auto;
+    min-width: 300px;
+    max-width: 500px;
+}
+
+.course-sidebar {
+    padding-right: 12px;
+}
+
+.resize-handle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 8px;
+    cursor: col-resize;
+    background: transparent;
+    transition: background var(--transition-fast);
+    z-index: 100;
+}
+
+.resize-handle:hover,
+.resize-handle.active {
+    background: var(--primary-color);
+}
+
+.learning-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+}
+
 .progress-section {
     background: var(--bg-card);
     padding: var(--spacing-lg);
@@ -485,6 +584,16 @@ function toggleModule(moduleId) {
     align-items: center;
     gap: var(--spacing-sm);
     flex: 1;
+    justify-content: space-between;
+}
+
+.resource-info,
+.test-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex: 1;
+    flex-wrap: wrap;
 }
 
 .lesson-icon {
@@ -494,6 +603,7 @@ function toggleModule(moduleId) {
 .lesson-text {
     flex: 1;
     font-size: var(--text-sm);
+    min-width: 0;
 }
 
 .lesson-meta {
@@ -514,7 +624,6 @@ function toggleModule(moduleId) {
 }
 
 .video-details {
-    margin-top: var(--spacing-xl);
     padding: var(--spacing-xl);
     background: var(--bg-card);
     border-radius: var(--radius-2xl);
@@ -544,7 +653,6 @@ function toggleModule(moduleId) {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: var(--spacing-lg);
     gap: var(--spacing-md);
 }
 
@@ -554,6 +662,12 @@ function toggleModule(moduleId) {
     border-radius: var(--radius-2xl);
     overflow: hidden;
     box-shadow: var(--shadow-xl);
+}
+
+.video-player-container video {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
 }
 
 /* Disable video seeking by hiding timeline controls */
@@ -631,6 +745,10 @@ video#main-video::-internal-media-controls-download-button {
     .learning-sidebar {
         position: static;
         max-height: none;
+    }
+    
+    .resize-handle {
+        display: none;
     }
 }
 </style>

@@ -52,7 +52,7 @@ class TestForm(forms.ModelForm):
 class QuestionForm(forms.ModelForm):
     class Meta:
         model = Question
-        fields = ['question_text', 'question_type', 'order']
+        fields = ['question_text', 'question_type', 'order', 'marks']
         widgets = {
             'question_text': forms.Textarea(attrs={'rows': 3}),
         }
@@ -62,6 +62,26 @@ class AnswerForm(forms.ModelForm):
     class Meta:
         model = Answer
         fields = ['answer_text', 'is_correct', 'order']
+
+
+class QuestionWithOptionsForm(forms.Form):
+    question_text = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}), required=True)
+    option_1 = forms.CharField(max_length=500, required=True, label='Option 1')
+    option_2 = forms.CharField(max_length=500, required=True, label='Option 2')
+    option_3 = forms.CharField(max_length=500, required=True, label='Option 3')
+    option_4 = forms.CharField(max_length=500, required=True, label='Option 4')
+    correct_answer = forms.ChoiceField(
+        choices=[
+            ('1', 'Option 1'),
+            ('2', 'Option 2'),
+            ('3', 'Option 3'),
+            ('4', 'Option 4'),
+        ],
+        required=True,
+        label='Correct Answer'
+    )
+    marks = forms.IntegerField(min_value=1, required=True, initial=1)
+    order = forms.IntegerField(min_value=1, required=True, initial=1)
 
 
 class LiveSessionForm(forms.ModelForm):

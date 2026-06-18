@@ -23,26 +23,39 @@
     
     <h3>Your Answers</h3>
     <div class="user-answers">
-        {% for user_answer in attempt.user_answers.all %}
+        {% for question in all_questions %}
             <div class="answer-item">
-                <h4>{{ user_answer.question.question_text }}</h4>
-                <p><strong>Your Answer:</strong> {{ user_answer.selected_answer.answer_text }}</p>
-                <p><strong>Correct:</strong> 
-                    {% if user_answer.is_correct %}
-                        <span class="badge badge-success">Yes</span>
-                    {% else %}
-                        <span class="badge badge-danger">No</span>
+                <h4>{{ question.question_text }}</h4>
+                {% for user_answer in attempt.user_answers.all %}
+                    {% if user_answer.question.id == question.id %}
+                        <p><strong>Your Answer:</strong> {{ user_answer.selected_answer.answer_text }}</p>
+                        <p><strong>Correct:</strong> 
+                            {% if user_answer.is_correct %}
+                                <span class="badge badge-success">Yes</span>
+                            {% else %}
+                                <span class="badge badge-danger">No</span>
+                            {% endif %}
+                        </p>
+                        {% if not user_answer.is_correct %}
+                            <p><strong>Correct Answer:</strong> 
+                                {% for answer in question.answers.all %}
+                                    {% if answer.is_correct %}
+                                        {{ answer.answer_text }}
+                                    {% endif %}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
                     {% endif %}
-                </p>
-                {% if not user_answer.is_correct %}
+                {% empty %}
+                    <p><strong>Your Answer:</strong> <span class="badge badge-warning">Not Answered</span></p>
                     <p><strong>Correct Answer:</strong> 
-                        {% for answer in user_answer.question.answers.all %}
+                        {% for answer in question.answers.all %}
                             {% if answer.is_correct %}
                                 {{ answer.answer_text }}
                             {% endif %}
                         {% endfor %}
                     </p>
-                {% endif %}
+                {% endfor %}
             </div>
         {% endfor %}
     </div>

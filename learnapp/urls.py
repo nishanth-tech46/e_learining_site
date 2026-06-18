@@ -54,4 +54,8 @@ urlpatterns = [
     path('live-session/<int:session_id>/watch/', views.watch_live_session, name='watch_live_session'),
     path('live-session/<int:session_id>/chat/', views.live_chat, name='live_chat'),
     path('live-session/<int:session_id>/delete/', views.delete_live_session, name='delete_live_session'),
+    
+    # Activity tracking URLs
+    path('admin/activity-history/', views.activity_history, name='activity_history'),
+    path('my-activity/', views.my_activity, name='my_activity'),
 ]

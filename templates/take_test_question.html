@@ -4,52 +4,39 @@
 
 {% block extra_js %}
 <script>
-let timer;
-const timePerQuestion = {{ time_per_question }};
-let timeLeft = timePerQuestion;
+var timeLeft = {{ time_per_question }};
 
-function startTimer() {
-    timer = setInterval(function() {
-        timeLeft--;
-        document.getElementById('timer').textContent = timeLeft;
-        
-        if (timeLeft <= 0) {
-            clearInterval(timer);
-            submitAnswer();
-        }
-    }, 1000);
-}
-
-function submitAnswer() {
-    clearInterval(timer);
-    const selectedAnswer = document.querySelector('input[name="answer_id"]:checked');
-    const form = document.getElementById('question-form');
-    
-    if (selectedAnswer) {
-        form.submit();
-    } else {
-        // Submit without answer if time expired
-        form.submit();
-    }
+function formatTime(seconds) {
+    var minutes = Math.floor(seconds / 60);
+    var remainingSeconds = seconds % 60;
+    return minutes.toString().padStart(2, '0') + ':' + remainingSeconds.toString().padStart(2, '0');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    startTimer();
-    
-    // Apply test security restrictions
-    applyTestSecurityRestrictions();
+    var timerElement = document.getElementById('timer');
+    if (timerElement) {
+        timerElement.textContent = formatTime(timeLeft);
+        
+        setInterval(function() {
+            timeLeft--;
+            timerElement.textContent = formatTime(timeLeft);
+            if (timeLeft <= 0) {
+                document.getElementById('question-form').submit();
+            }
+        }, 1000);
+    }
 });
 </script>
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="test-container bounce-in">
+    <div class="test-container animate-slide-up">
         <!-- Test Progress Header -->
         <div class="test-progress-header">
             <div class="progress-info">
-                <span>Question {{ current_index }} of {{ total_questions }}</span>
-                <span>Time: <span id="timer">{{ time_per_question }}</span>s</span>
+                <span class="question-counter">Question {{ current_index }} of {{ total_questions }}</span>
+                <span class="timer-display">⏱️ <span id="timer">--:--</span></span>
             </div>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: {{ progress_percentage }}%"></div>
@@ -58,7 +45,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         <!-- Question Card -->
         <div class="question-card">
-            <h2>{{ question.question_text }}</h2>
+            <div class="question-header">
+                <span class="question-number">Q{{ current_index }}</span>
+                <h2>{{ question.question_text }}</h2>
+            </div>
             
             <form method="post" id="question-form">
                 {% csrf_token %}
@@ -67,13 +57,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     {% for answer in answers %}
                         <div class="answer-option">
                             <input type="radio" id="answer_{{ answer.id }}" name="answer_id" value="{{ answer.id }}">
-                            <label for="answer_{{ answer.id }}">{{ answer.answer_text }}</label>
+                            <label for="answer_{{ answer.id }}">
+                                <span class="option-label">{{ forloop.counter }}</span>
+                                <span class="option-text">{{ answer.answer_text }}</span>
+                            </label>
                         </div>
                     {% endfor %}
                 </div>
                 
                 <div class="question-actions">
-                    <button type="button" onclick="submitAnswer()" class="btn btn-primary">Next Question</button>
+                    {% if current_index > 1 %}
+                        <a href="javascript:history.back()" class="btn btn-secondary">⬅️ Previous</a>
+                    {% endif %}
+                    
+                    {% if current_index == total_questions %}
+                        <button type="submit" class="btn btn-success btn-lg">✅ Submit Test</button>
+                    {% else %}
+                        <button type="submit" class="btn btn-primary btn-lg">➡️ Next Question</button>
+                    {% endif %}
                 </div>
             </form>
         </div>
@@ -82,86 +83,181 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <style>
 .test-container {
-    max-width: 800px;
-    margin: 0 auto;
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
 }
 
 .test-progress-header {
-    background-color: var(--bg-card);
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
+    background: var(--bg-card);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--spacing-lg);
     border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
 }
 
 .progress-info {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 10px;
-    font-weight: bold;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    font-weight: 700;
     color: var(--text-primary);
 }
 
+.question-counter {
+    font-size: var(--text-lg);
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.timer-display {
+    font-size: var(--text-xl);
+    color: var(--primary-color);
+}
+
+#timer {
+    font-weight: 800;
+    font-size: 1.3em;
+    transition: color 0.3s ease;
+}
+
 .progress-bar {
-    height: 10px;
-    background-color: var(--bg-secondary);
-    border-radius: 5px;
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-full);
     overflow: hidden;
 }
 
 .progress-fill {
     height: 100%;
-    background-color: var(--accent-color);
-    transition: width 0.3s ease;
+    background: var(--gradient-primary);
+    transition: width 0.5s ease;
+    border-radius: var(--radius-full);
 }
 
 .question-card {
-    background-color: var(--bg-card);
-    padding: 30px;
-    border-radius: 10px;
+    background: var(--bg-card);
+    padding: var(--spacing-2xl);
+    border-radius: var(--radius-xl);
     border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+}
+
+.question-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.question-number {
+    display: inline-block;
+    background: var(--gradient-primary);
+    color: var(--text-inverse);
+    padding: 8px 16px;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    font-size: var(--text-sm);
+    margin-bottom: var(--spacing-md);
 }
 
 .question-card h2 {
     color: var(--text-primary);
-    margin-bottom: 20px;
+    margin: 0;
+    font-size: var(--text-xl);
+    line-height: 1.6;
 }
 
 .answers-list {
-    margin-bottom: 20px;
+    margin-bottom: var(--spacing-xl);
 }
 
 .answer-option {
-    margin-bottom: 15px;
-    padding: 15px;
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-lg);
     border: 2px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--transition-normal);
+    background: var(--bg-secondary);
 }
 
 .answer-option:hover {
-    border-color: var(--accent-color);
-    background-color: var(--bg-secondary);
+    border-color: var(--primary-color);
+    background: var(--bg-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.answer-option.selected {
+    border-color: var(--primary-color);
+    background: var(--info-bg);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
 .answer-option input[type="radio"] {
-    margin-right: 10px;
+    margin-right: var(--spacing-md);
+    cursor: pointer;
 }
 
-.answer-option label {
+.answer-option {
     cursor: pointer;
     color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    font-size: var(--text-base);
+}
+
+.option-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--gradient-primary);
+    color: var(--text-inverse);
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    font-size: var(--text-sm);
+    flex-shrink: 0;
+}
+
+.option-text {
+    flex: 1;
 }
 
 .question-actions {
-    text-align: right;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
 }
 
-#timer {
-    color: var(--accent-color);
-    font-weight: bold;
-    font-size: 1.2em;
+.question-actions button {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .test-container {
+        margin: 20px auto;
+        padding: 0 10px;
+    }
+    
+    .question-card {
+        padding: var(--spacing-lg);
+    }
+    
+    .question-actions {
+        flex-direction: column;
+    }
+    
+    .question-actions button {
+        width: 100%;
+    }
 }
 </style>
 {% endblock %}

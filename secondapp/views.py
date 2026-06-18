@@ -8,6 +8,8 @@ from django.contrib.auth.decorators import login_required
 
 from django.views.decorators.csrf import csrf_protect
 
+from learnapp.models import UserActivity
+
 from django.contrib import messages
 
 from django.core.mail import send_mail
@@ -88,7 +90,13 @@ def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            # Log registration activity
+            UserActivity.objects.create(
+                user=user,
+                activity_type='registered',
+                description='Registered on the platform'
+            )
             messages.success(request, 'Registration successful. Please login.')
             return redirect('login')
     else:
@@ -137,6 +145,13 @@ def login_view(request):
                 authenticated_user.account_locked = False
                 authenticated_user.locked_until = None
                 authenticated_user.save()
+                
+                # Log login activity
+                UserActivity.objects.create(
+                    user=authenticated_user,
+                    activity_type='logged_in',
+                    description='Logged in to the platform'
+                )
 
                 messages.success(request, 'Login successful.')
                 
@@ -280,8 +295,12 @@ def dashboard(request):
     # Calculate completed courses count
     completed_count = request.user.enrollments.filter(is_completed=True).count()
     
+    # Get recent activities for the user
+    recent_activities = UserActivity.objects.filter(user=request.user)[:10]
+    
     return render(request, 'dashboard.html', {
-        'completed_count': completed_count
+        'completed_count': completed_count,
+        'recent_activities': recent_activities
     })
 
 

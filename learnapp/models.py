@@ -155,6 +155,7 @@ class Question(models.Model):
     question_text = models.TextField()
     question_type = models.CharField(max_length=20, choices=QUESTION_TYPE_CHOICES, default='mcq')
     order = models.PositiveIntegerField(default=0)
+    marks = models.PositiveIntegerField(default=1, help_text='Marks for this question')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -249,6 +250,51 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"{self.sender.username}: {self.message[:30]}"
+
+
+class UserActivity(models.Model):
+    ACTIVITY_TYPE_CHOICES = (
+        ('watched_video', 'Watched Video'),
+        ('completed_lesson', 'Completed Lesson'),
+        ('enrolled_course', 'Enrolled in Course'),
+        ('started_test', 'Started Test'),
+        ('completed_test', 'Completed Test'),
+        ('viewed_course', 'Viewed Course'),
+        ('downloaded_resource', 'Downloaded Resource'),
+        ('logged_in', 'Logged In'),
+        ('registered', 'Registered'),
+    )
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
+    activity_type = models.CharField(max_length=30, choices=ACTIVITY_TYPE_CHOICES)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True, related_name='activities')
+    video = models.ForeignKey(Video, on_delete=models.CASCADE, null=True, blank=True, related_name='activities')
+    test = models.ForeignKey(Test, on_delete=models.CASCADE, null=True, blank=True, related_name='activities')
+    description = models.CharField(max_length=500)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name_plural = 'User Activities'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.get_activity_type_display()}"
+    
+    def get_relative_time(self):
+        from django.utils import timezone
+        now = timezone.now()
+        diff = now - self.timestamp
+        
+        if diff.days > 0:
+            return f"{diff.days} day{'s' if diff.days > 1 else ''} ago"
+        elif diff.seconds >= 3600:
+            hours = diff.seconds // 3600
+            return f"{hours} hour{'s' if hours > 1 else ''} ago"
+        elif diff.seconds >= 60:
+            minutes = diff.seconds // 60
+            return f"{minutes} minute{'s' if minutes > 1 else ''} ago"
+        else:
+            return "Just now"
 
 
 # Signal handlers for automatic file cleanup

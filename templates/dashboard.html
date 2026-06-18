@@ -11,13 +11,6 @@
             <p>Continue your learning journey and achieve your goals</p>
         </div>
 
-        <!-- Learning Streak -->
-        <div class="learning-streak animate-slide-up" style="animation-delay: 0.1s;">
-            <div class="streak-number">🔥 7</div>
-            <div class="streak-label">Day Learning Streak</div>
-            <p class="streak-message">Keep it up! You're on fire!</p>
-        </div>
-
         <!-- Dashboard Stats Grid -->
         <div class="dashboard-grid animate-slide-up" style="animation-delay: 0.2s;">
             <div class="dashboard-card">
@@ -87,27 +80,41 @@
         <div class="dashboard-section animate-slide-up" style="animation-delay: 0.4s;">
             <h2>📈 Recent Activity</h2>
             <div class="activity-list">
-                <div class="activity-item">
-                    <div class="activity-icon">📹</div>
-                    <div class="activity-content">
-                        <div class="activity-title">Watched "Introduction to Python"</div>
-                        <div class="activity-time">2 hours ago</div>
+                {% for activity in recent_activities %}
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            {% if activity.activity_type == 'watched_video' %}
+                                🎥
+                            {% elif activity.activity_type == 'completed_lesson' %}
+                                ✅
+                            {% elif activity.activity_type == 'enrolled_course' %}
+                                📚
+                            {% elif activity.activity_type == 'started_test' %}
+                                📝
+                            {% elif activity.activity_type == 'completed_test' %}
+                                🏆
+                            {% elif activity.activity_type == 'viewed_course' %}
+                                👁️
+                            {% elif activity.activity_type == 'downloaded_resource' %}
+                                📥
+                            {% elif activity.activity_type == 'logged_in' %}
+                                🔐
+                            {% elif activity.activity_type == 'registered' %}
+                                🆔
+                            {% else %}
+                                📌
+                            {% endif %}
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">{{ activity.description }}</div>
+                            <div class="activity-time">{{ activity.get_relative_time }}</div>
+                        </div>
                     </div>
-                </div>
-                <div class="activity-item">
-                    <div class="activity-icon">✅</div>
-                    <div class="activity-content">
-                        <div class="activity-title">Completed "Web Development Basics"</div>
-                        <div class="activity-time">Yesterday</div>
+                {% empty %}
+                    <div class="empty-state">
+                        <p>No recent activity available.</p>
                     </div>
-                </div>
-                <div class="activity-item">
-                    <div class="activity-icon">📝</div>
-                    <div class="activity-content">
-                        <div class="activity-title">Passed Quiz with 85% score</div>
-                        <div class="activity-time">2 days ago</div>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
         </div>
 

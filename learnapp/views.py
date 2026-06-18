@@ -9,8 +9,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from django.db.models import Q
-from .models import Course, Video, CourseFile, Enrollment, VideoProgress, Category, Test, Question, Answer, TestAttempt, UserAnswer, LiveSession, ChatMessage
-from .forms import CourseForm, VideoForm, CourseFileForm, TestForm, QuestionForm, AnswerForm, LiveSessionForm, ContactAdminForm
+from .models import Course, Video, CourseFile, Enrollment, VideoProgress, Category, Test, Question, Answer, TestAttempt, UserAnswer, LiveSession, ChatMessage, UserActivity
+from .forms import CourseForm, VideoForm, CourseFileForm, TestForm, QuestionForm, AnswerForm, LiveSessionForm, ContactAdminForm, QuestionWithOptionsForm
 from secondapp.decorators import admin_required
 
 User = get_user_model()
@@ -64,6 +64,15 @@ def enroll_course(request, course_id):
     
     # Enroll directly - payment removed, access controlled by admin
     Enrollment.objects.create(user=request.user, course=course)
+    
+    # Log activity
+    UserActivity.objects.create(
+        user=request.user,
+        activity_type='enrolled_course',
+        course=course,
+        description=f'Enrolled in course: {course.title}'
+    )
+    
     messages.success(request, 'Successfully enrolled in the course!')
     return redirect('course_learning', course_id=course.id)
 
@@ -191,6 +200,16 @@ def update_video_progress(request, video_id):
             defaults={'watched_duration': watched_duration, 'is_completed': is_completed}
         )
         
+        # Log activity when video is completed
+        if is_completed and (created or not progress.is_completed):
+            UserActivity.objects.create(
+                user=request.user,
+                activity_type='watched_video',
+                video=video,
+                course=video.course,
+                description=f'Watched video: {video.title}'
+            )
+        
         if not created:
             progress.watched_duration = watched_duration
             progress.is_completed = is_completed
@@ -205,8 +224,15 @@ def update_video_progress(request, video_id):
         ).count()
         
         enrollment.progress = int((completed_videos / total_videos) * 100) if total_videos > 0 else 0
-        if enrollment.progress == 100:
+        if enrollment.progress == 100 and not enrollment.is_completed:
             enrollment.is_completed = True
+            # Log activity when course is completed
+            UserActivity.objects.create(
+                user=request.user,
+                activity_type='completed_lesson',
+                course=video.course,
+                description=f'Completed course: {video.course.title}'
+            )
         enrollment.save()
     
     return redirect(f"{reverse('course_learning', kwargs={'course_id': video.course.id})}?video={video.id}")
@@ -298,6 +324,11 @@ def admin_course_create(request):
             course.save()
             messages.success(request, 'Course created successfully.')
             return redirect('admin_course_detail', course_id=course.id)
+        else:
+            # Form is not valid - show errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
     else:
         form = CourseForm()
     
@@ -314,6 +345,11 @@ def admin_course_edit(request, course_id):
             form.save()
             messages.success(request, 'Course updated successfully.')
             return redirect('admin_course_detail', course_id=course.id)
+        else:
+            # Form is not valid - show errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
     else:
         form = CourseForm(instance=course)
     
@@ -546,17 +582,46 @@ def add_question(request, test_id):
     test = get_object_or_404(Test, id=test_id)
     
     if request.method == 'POST':
-        form = QuestionForm(request.POST)
+        form = QuestionWithOptionsForm(request.POST)
         if form.is_valid():
-            question = form.save(commit=False)
-            question.test = test
-            question.save()
-            messages.success(request, 'Question added successfully.')
+            # Create the question
+            question = Question.objects.create(
+                test=test,
+                question_text=form.cleaned_data['question_text'],
+                question_type='multiple_choice',
+                marks=form.cleaned_data['marks'],
+                order=form.cleaned_data['order']
+            )
+            
+            # Create all 4 options
+            options = [
+                form.cleaned_data['option_1'],
+                form.cleaned_data['option_2'],
+                form.cleaned_data['option_3'],
+                form.cleaned_data['option_4']
+            ]
+            
+            correct_answer_index = int(form.cleaned_data['correct_answer']) - 1  # Convert to 0-based index
+            
+            for i, option_text in enumerate(options):
+                Answer.objects.create(
+                    question=question,
+                    answer_text=option_text,
+                    is_correct=(i == correct_answer_index),
+                    order=i + 1
+                )
+            
+            messages.success(request, 'Question with all options added successfully.')
             return redirect('test_detail', test_id=test.id)
+        else:
+            # Form is not valid - show errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
     else:
-        form = QuestionForm()
+        form = QuestionWithOptionsForm()
     
-    return render(request, 'add_question.html', {
+    return render(request, 'add_question_with_options.html', {
         'form': form,
         'test': test
     })
@@ -576,6 +641,11 @@ def edit_question(request, question_id):
             form.save()
             messages.success(request, 'Question updated successfully.')
             return redirect('test_detail', test_id=question.test.id)
+        else:
+            # Form is not valid - show errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
     else:
         form = QuestionForm(instance=question)
     
@@ -675,10 +745,14 @@ def delete_answer(request, answer_id):
 def test_detail(request, test_id):
     test = get_object_or_404(Test, id=test_id)
     questions = test.questions.all()
+    question_count = questions.count()
+    total_attempts = TestAttempt.objects.filter(test=test).count()
     
     return render(request, 'test_detail.html', {
         'test': test,
-        'questions': questions
+        'questions': questions,
+        'question_count': question_count,
+        'total_attempts': total_attempts
     })
 
 
@@ -696,6 +770,11 @@ def edit_test(request, test_id):
             form.save()
             messages.success(request, 'Test updated successfully.')
             return redirect('test_detail', test_id=test.id)
+        else:
+            # Form is not valid - show errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
     else:
         form = TestForm(instance=test)
     
@@ -741,13 +820,22 @@ def take_test(request, test_id):
         messages.error(request, 'You must be enrolled in this course to take the test.')
         return redirect('course_detail', course_id=test.course.id)
     
-    # Check attempts
-    attempts = TestAttempt.objects.filter(user=request.user, test=test).count()
-    remaining_attempts = test.max_attempts - attempts
-    
-    if remaining_attempts <= 0:
-        messages.info(request, f'You have used all your {test.max_attempts} attempts for this test.')
-        return redirect('test_result', attempt_id=TestAttempt.objects.filter(user=request.user, test=test).first().id)
+    # Check for any existing attempt (complete or incomplete)
+    existing_attempt = TestAttempt.objects.filter(user=request.user, test=test).first()
+    if existing_attempt:
+        if existing_attempt.completed_at:
+            # Attempt is already completed
+            messages.info(request, 'You have already completed this test.')
+            return redirect('test_result', attempt_id=existing_attempt.id)
+        else:
+            # Attempt is incomplete - resume it
+            messages.info(request, 'Resuming your previous test attempt.')
+            first_question = test.questions.first()
+            if first_question:
+                return redirect('take_test_question', attempt_id=existing_attempt.id, question_id=first_question.id)
+            else:
+                messages.error(request, 'No questions available for this test.')
+                return redirect('course_detail', course_id=test.course.id)
     
     if request.method == 'POST':
         # Create test attempt
@@ -755,6 +843,15 @@ def take_test(request, test_id):
             user=request.user,
             test=test,
             total_questions=test.questions.count()
+        )
+        
+        # Log activity
+        UserActivity.objects.create(
+            user=request.user,
+            activity_type='started_test',
+            test=test,
+            course=test.course,
+            description=f'Started test: {test.title}'
         )
         
         # Redirect to first question
@@ -768,8 +865,8 @@ def take_test(request, test_id):
     # Show pre-test popup information
     return render(request, 'take_test_confirm.html', {
         'test': test,
-        'attempts': attempts,
-        'remaining_attempts': remaining_attempts,
+        'attempts': 0,
+        'remaining_attempts': test.max_attempts,
         'total_questions': test.questions.count(),
         'total_marks': test.questions.count(),
         'time_per_question': test.time_per_question
@@ -790,25 +887,46 @@ def take_test_question(request, attempt_id, question_id):
     all_questions = list(attempt.test.questions.all().order_by('order'))
     current_index = all_questions.index(question)
     
+    # Calculate time per question (total duration in minutes / number of questions)
+    total_duration_minutes = attempt.test.duration
+    total_questions_count = len(all_questions)
+    time_per_question_seconds = (total_duration_minutes * 60) // total_questions_count if total_questions_count > 0 else 60
+    
     if request.method == 'POST':
-        # Save answer
+        # Check if user has already answered this question
+        existing_answer = UserAnswer.objects.filter(attempt=attempt, question=question).first()
+        
         answer_id = request.POST.get('answer_id')
         if answer_id:
             answer = get_object_or_404(Answer, id=answer_id)
-            UserAnswer.objects.create(
-                attempt=attempt,
-                question=question,
-                selected_answer=answer,
-                is_correct=answer.is_correct
-            )
+            if existing_answer:
+                # Update existing answer
+                existing_answer.selected_answer = answer
+                existing_answer.is_correct = answer.is_correct
+                existing_answer.save()
+            else:
+                # Create new answer
+                UserAnswer.objects.create(
+                    attempt=attempt,
+                    question=question,
+                    selected_answer=answer,
+                    is_correct=answer.is_correct
+                )
         else:
             # No answer selected - mark as incorrect
-            UserAnswer.objects.create(
-                attempt=attempt,
-                question=question,
-                selected_answer=None,
-                is_correct=False
-            )
+            if existing_answer:
+                # Update existing answer
+                existing_answer.selected_answer = None
+                existing_answer.is_correct = False
+                existing_answer.save()
+            else:
+                # Create new answer
+                UserAnswer.objects.create(
+                    attempt=attempt,
+                    question=question,
+                    selected_answer=None,
+                    is_correct=False
+                )
         
         # Move to next question or submit
         if current_index < len(all_questions) - 1:
@@ -816,11 +934,22 @@ def take_test_question(request, attempt_id, question_id):
             return redirect('take_test_question', attempt_id=attempt.id, question_id=next_question.id)
         else:
             # Calculate final score
+            total_questions = attempt.test.questions.count()
             attempt.correct_answers = UserAnswer.objects.filter(attempt=attempt, is_correct=True).count()
-            attempt.score = (attempt.correct_answers / attempt.total_questions) * 100 if attempt.total_questions > 0 else 0
+            attempt.total_questions = total_questions
+            attempt.score = (attempt.correct_answers / total_questions) * 100 if total_questions > 0 else 0
             attempt.is_passed = attempt.score >= attempt.test.passing_score
             attempt.completed_at = timezone.now()
             attempt.save()
+            
+            # Log activity
+            UserActivity.objects.create(
+                user=request.user,
+                activity_type='completed_test',
+                test=attempt.test,
+                course=attempt.test.course,
+                description=f'Completed test: {attempt.test.title} (Score: {attempt.score}%)'
+            )
             
             messages.success(request, 'Test completed successfully.')
             return redirect('test_result', attempt_id=attempt.id)
@@ -831,7 +960,7 @@ def take_test_question(request, attempt_id, question_id):
         'answers': question.answers.all().order_by('order'),
         'current_index': current_index + 1,
         'total_questions': len(all_questions),
-        'time_per_question': attempt.test.time_per_question,
+        'time_per_question': time_per_question_seconds,
         'progress_percentage': int((current_index / len(all_questions)) * 100)
     })
 
@@ -844,8 +973,18 @@ def test_result(request, attempt_id):
     else:
         attempt = get_object_or_404(TestAttempt, id=attempt_id, user=request.user)
     
+    # Get all questions for this test
+    all_questions = attempt.test.questions.all().order_by('order')
+    
+    # Create a dictionary of user answers for quick lookup
+    user_answers_dict = {}
+    for user_answer in attempt.user_answers.all():
+        user_answers_dict[user_answer.question.id] = user_answer
+    
     return render(request, 'test_result.html', {
-        'attempt': attempt
+        'attempt': attempt,
+        'all_questions': all_questions,
+        'user_answers_dict': user_answers_dict
     })
 
 
@@ -971,6 +1110,56 @@ def admin_test_results(request):
         'stats': stats,
         'results': page_obj,
         'page_obj': page_obj
+    })
+
+
+@login_required
+def activity_history(request):
+    if request.user.user_type != 'admin':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    
+    # Get filter parameters
+    activity_type = request.GET.get('activity_type', '')
+    user_filter = request.GET.get('user', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    
+    # Build query
+    activities = UserActivity.objects.all()
+    
+    # Apply filters
+    if activity_type:
+        activities = activities.filter(activity_type=activity_type)
+    if user_filter:
+        activities = activities.filter(user__username__icontains=user_filter)
+    if date_from:
+        activities = activities.filter(timestamp__gte=date_from)
+    if date_to:
+        activities = activities.filter(timestamp__lte=date_to)
+    
+    # Pagination
+    paginator = Paginator(activities, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'activity_history.html', {
+        'activities': page_obj,
+        'activity_types': UserActivity.ACTIVITY_TYPE_CHOICES,
+        'activity_type': activity_type,
+        'user_filter': user_filter,
+        'date_from': date_from,
+        'date_to': date_to
+    })
+
+
+@login_required
+def my_activity(request):
+    # Show only current user's activities
+    activities = UserActivity.objects.filter(user=request.user)[:10]
+    
+    return render(request, 'my_activity.html', {
+        'activities': activities
     })
 
 

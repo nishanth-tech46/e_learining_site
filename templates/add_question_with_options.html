@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Question - {{ test.title }}{% endblock %}
+
+{% block content %}
+<div class="admin-container animate-slide-up">
+    <div class="admin-card">
+        <div class="admin-header">
+            <h1>📝 Add Question with Options</h1>
+            <p>Test: {{ test.title }}</p>
+        </div>
+        
+        <form method="post" class="question-form animate-slide-up">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.question_text.id_for_label }}">Question Text *</label>
+                {{ form.question_text }}
+                {% if form.question_text.errors %}
+                    <div class="error">{{ form.question_text.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="options-grid">
+                <div class="form-group">
+                    <label for="{{ form.option_1.id_for_label }}">Option 1 *</label>
+                    {{ form.option_1 }}
+                    {% if form.option_1.errors %}
+                        <div class="error">{{ form.option_1.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.option_2.id_for_label }}">Option 2 *</label>
+                    {{ form.option_2 }}
+                    {% if form.option_2.errors %}
+                        <div class="error">{{ form.option_2.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.option_3.id_for_label }}">Option 3 *</label>
+                    {{ form.option_3 }}
+                    {% if form.option_3.errors %}
+                        <div class="error">{{ form.option_3.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.option_4.id_for_label }}">Option 4 *</label>
+                    {{ form.option_4 }}
+                    {% if form.option_4.errors %}
+                        <div class="error">{{ form.option_4.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.correct_answer.id_for_label }}">Correct Answer *</label>
+                    {{ form.correct_answer }}
+                    {% if form.correct_answer.errors %}
+                        <div class="error">{{ form.correct_answer.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.marks.id_for_label }}">Marks *</label>
+                    {{ form.marks }}
+                    {% if form.marks.errors %}
+                        <div class="error">{{ form.marks.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.order.id_for_label }}">Order *</label>
+                    {{ form.order }}
+                    {% if form.order.errors %}
+                        <div class="error">{{ form.order.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-lg">Save Question with Options</button>
+                <a href="{% url 'test_detail' test.id %}" class="btn btn-secondary btn-lg">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.admin-container {
+    padding: var(--spacing-xl) 0;
+}
+
+.admin-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-2xl);
+    padding: var(--spacing-2xl);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--border-color);
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.admin-header {
+    margin-bottom: var(--spacing-xl);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--spacing-lg);
+}
+
+.admin-header h1 {
+    font-size: var(--text-3xl);
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.admin-header p {
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+}
+
+.question-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: var(--text-base);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: var(--text-base);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    transition: all var(--transition-normal);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+}
+
+.error {
+    color: var(--danger-color);
+    font-size: var(--text-sm);
+    margin-top: var(--spacing-xs);
+}
+
+@media (max-width: 768px) {
+    .admin-card {
+        padding: var(--spacing-lg);
+        margin: var(--spacing-md);
+    }
+    
+    .options-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions button,
+    .form-actions a {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
