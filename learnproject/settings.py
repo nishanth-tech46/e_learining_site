@@ -89,8 +89,6 @@ INSTALLED_APPS = [
 
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
     'django.middleware.security.SecurityMiddleware',
@@ -297,6 +295,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'free4495663@gmail.com'
 EMAIL_HOST_PASSWORD = 'imkk amav bmwe fpef'
+DEFAULT_FROM_EMAIL = 'free4495663@gmail.com'
 
 # Twilio settings for SMS OTP
 TWILIO_ACCOUNT_SID = 'your-twilio-account-sid'
