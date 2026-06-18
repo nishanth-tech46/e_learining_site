@@ -48,11 +48,13 @@ SECRET_KEY = 'django-insecure-+#p7_#fzu$fav@t&9b$&e0b&9i$0s-q&o$y&nrdz63%@^6*shn
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-DEBUG = True
+DEBUG = False
 
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['e-learning-site.onrender.com',
+    'localhost',
+    '127.0.0.1',]
 
 
 
