@@ -52,7 +52,7 @@ DEBUG = False
 
 
 
-ALLOWED_HOSTS = ['e-learning-site.onrender.com',
+ALLOWED_HOSTS = ['.onrender.com',
     'localhost',
     '127.0.0.1',]
 
