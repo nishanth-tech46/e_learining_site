@@ -6,8 +6,8 @@
 
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize theme
-    initTheme();
+    // Theme initialization is now handled in base.html
+    // initTheme(); // Commented out to prevent conflicts
     
     // Auto-hide messages after 5 seconds
     const messages = document.querySelectorAll('.message, .alert');
@@ -95,7 +95,10 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============================================
 // THEME MANAGEMENT
 // ============================================
+// Theme management is now handled in base.html to avoid conflicts
+// This section is commented out to prevent double theme initialization
 
+/*
 function initTheme() {
     // Check for saved theme preference
     const savedTheme = localStorage.getItem('darkMode');
@@ -136,6 +139,7 @@ function toggleDarkMode() {
         });
     }
 }
+*/
 
 // ============================================
 // UTILITY FUNCTIONS

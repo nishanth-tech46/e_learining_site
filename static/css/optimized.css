@@ -1920,13 +1920,9 @@ footer p {
 /* High Contrast Mode Support */
 @media (prefers-contrast: high) {
     :root {
-        --border-color: #000000;
+        --border-color: #ffffff;
         --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
         --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-    }
-    
-    [data-theme="dark"] {
-        --border-color: #ffffff;
     }
 }
 
