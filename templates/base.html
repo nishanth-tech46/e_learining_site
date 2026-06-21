@@ -54,6 +54,8 @@
     </div>
 </header>
 
+<div class="nav-overlay" onclick="toggleMobileMenu()"></div>
+
 <main id="main-content" role="main">
     {% if messages %}
         {% for message in messages %}
@@ -241,15 +243,12 @@ function toggleDarkMode() {
 
 function toggleMobileMenu() {
     const navMenu = document.querySelector('.nav-menu');
-    navMenu.classList.toggle('active');
+    const navOverlay = document.querySelector('.nav-overlay');
+    const body = document.body;
     
-    // Close menu when clicking outside
-    document.addEventListener('click', function closeMenu(event) {
-        if (!event.target.closest('.nav-menu') && !event.target.closest('.mobile-menu-toggle')) {
-            navMenu.classList.remove('active');
-            document.removeEventListener('click', closeMenu);
-        }
-    });
+    navMenu.classList.toggle('active');
+    navOverlay.classList.toggle('active');
+    body.classList.toggle('menu-open');
 }
 
 // Check for saved theme preference on page load
