@@ -29,6 +29,12 @@
             <a href="{% url 'index' %}" class="logo-link" aria-label="E-Learning Platform Home">🎓 E-Learning</a>
         </div>
 
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle mobile menu">
+            <span class="hamburger"></span>
+            <span class="hamburger"></span>
+            <span class="hamburger"></span>
+        </button>
+
         <nav role="navigation" aria-label="Main navigation">
             <ul class="nav-menu">
                 {% if user.is_authenticated %}
@@ -230,6 +236,19 @@ function toggleDarkMode() {
         position: 'top-end',
         showConfirmButton: false,
         timer: 1500
+    });
+}
+
+function toggleMobileMenu() {
+    const navMenu = document.querySelector('.nav-menu');
+    navMenu.classList.toggle('active');
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', function closeMenu(event) {
+        if (!event.target.closest('.nav-menu') && !event.target.closest('.mobile-menu-toggle')) {
+            navMenu.classList.remove('active');
+            document.removeEventListener('click', closeMenu);
+        }
     });
 }
 
